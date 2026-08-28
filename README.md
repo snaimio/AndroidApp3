@@ -79,8 +79,6 @@ A comprehensive Android app featuring **14 sensor-based tools** using GPS, Accel
 
 ---
 
-## 📱 Screenshots
-
 ### Dashboard
 ```
 ┌─────────────────────────────────────────────┐
@@ -193,42 +191,6 @@ SensorToolBox/
 4. **Run the app**
     - Connect an Android device (physical device recommended for sensors)
     - Click the Run button (▶️)
-
----
-
-## 📝 AI Reflection
-
-See [AIReflection.md](AIReflection.md) for a detailed reflection on AI usage in this assignment.
-
----
-
-## 👨‍🏫 Assignment Details
-
-| Aspect | Detail |
-|--------|--------|
-| **Course Code** | MWD3B (Android) |
-| **Course Name** | Android Development |
-| **Assignment** | Assignment 5 |
-| **Textbook** | Wenderlich, R. (2021). Android Apprentice. Kodeco. |
-| **Software** | Android Studio, Git |
-
----
-
-## 📋 Rubric Score
-
-| Criteria | Score |
-|----------|-------|
-| Features | 5/5 |
-| Functionality | 5/5 |
-| Commenting | 5/5 |
-| AI Reflection | 5/5 |
-| **TOTAL** | **20/20** |
-
----
-
-## 📄 License
-
-This project is for educational purposes as part of the Android Development course (MWD3B). See [LICENSE](LICENSE) for details.
 
 ---
 
