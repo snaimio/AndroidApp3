@@ -1,0 +1,27 @@
+<!--
+    ic_launcher_foreground.xml - Adaptive Icon Foreground
+    This is the main app icon that appears on the device home screen.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <group android:scaleX="0.6"
+        android:scaleY="0.6"
+        android:translateX="21.6"
+        android:translateY="21.6">
+        <path
+            android:fillColor="#FFFFFF"
+            android:pathData="M54,18 L54,18 C72,18 86,32 86,50 L86,50 C86,68 72,82 54,82 L54,82 C36,82 22,68 22,50 L22,50 C22,32 36,18 54,18 Z"/>
+        <path
+            android:fillColor="#1A237E"
+            android:pathData="M54,25 C40,25 29,36 29,50 C29,64 40,75 54,75 C68,75 79,64 79,50 C79,36 68,25 54,25 Z"/>
+        <path
+            android:fillColor="#FF5722"
+            android:pathData="M54,38 L47,56 L54,52 L61,56 Z"/>
+        <path
+            android:fillColor="#FFFFFF"
+            android:pathData="M50,45 A4,4 0 1,1 58,45 A4,4 0 1,1 50,45 Z"/>
+    </group>
+</vector>

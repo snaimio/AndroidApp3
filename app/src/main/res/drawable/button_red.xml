@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    button_red.xml - Red Rounded Button Background
+    Used for Stop button in Trail Tracker
+-->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <gradient
+        android:startColor="#F44336"
+        android:endColor="#C62828"
+        android:angle="90"
+        android:type="linear" />
+    <corners android:radius="10dp" />
+    <padding
+        android:left="20dp"
+        android:top="10dp"
+        android:right="20dp"
+        android:bottom="10dp" />
+</shape>

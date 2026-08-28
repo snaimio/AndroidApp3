@@ -1,0 +1,49 @@
+<!--
+    compass_rose.xml - Vector drawable for the compass
+    This creates a simple compass rose with:
+    - North pointer (RED) - points up
+    - South pointer (GRAY) - points down
+    - East pointer (GRAY) - points right
+    - West pointer (GRAY) - points left
+    - Center dot
+    - Outer ring
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="200dp"
+    android:height="200dp"
+    android:viewportWidth="200"
+    android:viewportHeight="200">
+
+    <!-- Outer ring of the compass -->
+    <path
+        android:strokeColor="#333333"
+        android:strokeWidth="3"
+        android:fillColor="#FFFFFF"
+        android:pathData="M100,10 A90,90 0 1,1 100,190 A90,90 0 1,1 100,10 Z" />
+
+    <!-- North pointer - RED (points up) -->
+    <path
+        android:fillColor="#FF1744"
+        android:pathData="M100,15 L90,55 L100,48 L110,55 Z" />
+
+    <!-- South pointer - GRAY (points down) -->
+    <path
+        android:fillColor="#666666"
+        android:pathData="M100,185 L90,145 L100,152 L110,145 Z" />
+
+    <!-- East pointer - GRAY (points right) -->
+    <path
+        android:fillColor="#666666"
+        android:pathData="M185,100 L145,90 L152,100 L145,110 Z" />
+
+    <!-- West pointer - GRAY (points left) -->
+    <path
+        android:fillColor="#666666"
+        android:pathData="M15,100 L55,90 L48,100 L55,110 Z" />
+
+    <!-- Center dot -->
+    <path
+        android:fillColor="#333333"
+        android:pathData="M96,96 L104,96 L104,104 L96,104 Z" />
+
+</vector>

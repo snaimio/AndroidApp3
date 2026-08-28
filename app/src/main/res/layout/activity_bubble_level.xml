@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    ============================================================
+    activity_bubble_level.xml - Bubble Level Tool Layout
+    ============================================================
+    Features:
+    - Dark theme (#1A1A2E)
+    - Level container, bubble, pitch/roll
+    - NO buttons (automatic sensor reading)
+    - NO green checkboxes
+-->
+
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fitsSystemWindows="true"
+    android:paddingTop="?attr/actionBarSize"
+    android:paddingStart="16dp"
+    android:paddingEnd="16dp"
+    android:paddingBottom="16dp"
+    android:background="#1A1A2E"
+    tools:context=".motion.BubbleLevelActivity">
+
+    <!-- TOOLBAR -->
+    <androidx.appcompat.widget.Toolbar
+        android:id="@+id/toolbar"
+        android:layout_width="0dp"
+        android:layout_height="?attr/actionBarSize"
+        android:background="?attr/colorPrimary"
+        android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
+        app:title="Bubble Level"
+        app:titleTextColor="#FFFFFF"
+        app:navigationIcon="?attr/homeAsUpIndicator"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <!-- TITLE -->
+    <TextView
+        android:id="@+id/titleText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="🔵 Bubble Level"
+        android:textSize="24sp"
+        android:textStyle="bold"
+        android:textColor="#FFFFFF"
+        android:layout_marginTop="8dp"
+        app:layout_constraintTop_toBottomOf="@id/toolbar"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <!-- LEVEL CONTAINER -->
+    <androidx.cardview.widget.CardView
+        android:id="@+id/levelContainer"
+        android:layout_width="260dp"
+        android:layout_height="260dp"
+        android:layout_marginTop="12dp"
+        app:cardCornerRadius="130dp"
+        app:cardElevation="4dp"
+        app:cardBackgroundColor="#2A2A4E"
+        app:layout_constraintTop_toBottomOf="@id/titleText"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/bottomContainer"
+        app:layout_constraintVertical_bias="0.45">
+
+        <!-- Crosshair -->
+        <View
+            android:layout_width="1dp"
+            android:layout_height="match_parent"
+            android:background="#555555"
+            android:layout_gravity="center" />
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="#555555"
+            android:layout_gravity="center" />
+
+        <!-- BUBBLE -->
+        <View
+            android:id="@+id/bubble"
+            android:layout_width="44dp"
+            android:layout_height="44dp"
+            android:background="@drawable/bubble_shape"
+            android:layout_gravity="center" />
+
+    </androidx.cardview.widget.CardView>
+
+    <!-- BOTTOM CONTAINER -->
+    <LinearLayout
+        android:id="@+id/bottomContainer"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:gravity="center"
+        android:layout_marginTop="12dp"
+        android:layout_marginBottom="16dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <!-- PITCH & ROLL -->
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center">
+
+            <TextView
+                android:id="@+id/pitchText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Pitch: 0.0°"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:textColor="#FFFFFF"
+                android:layout_marginEnd="16dp" />
+
+            <TextView
+                android:id="@+id/rollText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Roll: 0.0°"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:textColor="#FFFFFF" />
+
+        </LinearLayout>
+
+        <!-- STATUS -->
+        <TextView
+            android:id="@+id/levelStatusText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="📱 Tilt your phone to level it"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:textColor="#4CAF50"
+            android:layout_marginTop="8dp" />
+
+    </LinearLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

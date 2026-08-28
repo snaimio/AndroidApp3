@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    bubble_shape.xml - The bubble that moves in the level
+    A blue circle with a shine effect for a 3D look
+-->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Outer shadow -->
+    <item>
+        <shape android:shape="oval">
+            <solid android:color="#40000000" />
+        </shape>
+    </item>
+    <!-- Main bubble -->
+    <item android:bottom="4dp" android:end="4dp" android:start="4dp" android:top="0dp">
+        <shape android:shape="oval">
+            <solid android:color="#2196F3" />
+            <stroke
+                android:width="2dp"
+                android:color="#1976D2" />
+        </shape>
+    </item>
+    <!-- Shine effect -->
+    <item android:bottom="20dp" android:end="20dp" android:start="8dp" android:top="4dp">
+        <shape android:shape="oval">
+            <solid android:color="#66FFFFFF" />
+        </shape>
+    </item>
+</layer-list>

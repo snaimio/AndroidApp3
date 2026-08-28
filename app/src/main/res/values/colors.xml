@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    ============================================================
+    colors.xml - All app colors in one place
+    ============================================================
+    This file defines ALL colors used in the app.
+    Each color has a name and a hex value.
+
+    WHY WE USE RESOURCE COLORS:
+    - Centralized management (change once, update everywhere)
+    - Consistent branding across the app
+    - Easy to maintain dark/light themes
+    - Reusable across multiple layouts
+
+    COLOR NAMING CONVENTION:
+    - color[Purpose] - e.g., colorPrimary, colorAccent
+    - color[Purpose][Variant] - e.g., colorPrimaryDark
+    - color[Purpose][State] - e.g., colorTextOnPrimary
+
+    HOW TO USE:
+    - In XML: android:background="@color/colorPrimary"
+    - In Kotlin: R.color.colorPrimary
+-->
+<resources>
+    <!-- ============================================================
+         PRIMARY BRAND COLORS - Main colors for the app
+         These define the app's identity and are used everywhere
+         ============================================================ -->
+
+    <!-- Main brand color (Deep Blue) - Used for toolbars, buttons, headers -->
+    <color name="colorPrimary">#1A237E</color>
+
+    <!-- Darker version of primary (Dark Blue) - Used for status bar -->
+    <color name="colorPrimaryDark">#0D1442</color>
+
+    <!-- Lighter version of primary (Light Blue) - Used for highlights -->
+    <color name="colorPrimaryLight">#3949AB</color>
+
+    <!-- ============================================================
+         SECONDARY/ACCENT COLORS - Used for interactive elements
+         Buttons, links, selected items, etc.
+         ============================================================ -->
+
+    <!-- Main accent color (Orange) - Used for primary buttons, highlights -->
+    <color name="colorAccent">#FF5722</color>
+
+    <!-- Darker accent (Dark Orange) - Used for pressed states -->
+    <color name="colorAccentDark">#BF360C</color>
+
+    <!-- Lighter accent (Light Orange) - Used for hover/selected states -->
+    <color name="colorAccentLight">#FF8A65</color>
+
+    <!-- ============================================================
+         BACKGROUND COLORS - Background surfaces
+         ============================================================ -->
+
+    <!-- Main background (Light Gray) - Used for screen backgrounds -->
+    <color name="colorBackground">#F5F5F5</color>
+
+    <!-- Card background (White) - Used for cards, dialogs, surfaces -->
+    <color name="colorCardBackground">#FFFFFF</color>
+
+    <!-- Surface color (Off White) - Used for secondary surfaces -->
+    <color name="colorSurface">#FAFAFA</color>
+
+    <!-- ============================================================
+         TEXT COLORS - All text colors
+         ============================================================ -->
+
+    <!-- Primary text (Dark Gray/Black) - Used for main text content -->
+    <color name="colorTextPrimary">#212121</color>
+
+    <!-- Secondary text (Gray) - Used for subtext, hints, metadata -->
+    <color name="colorTextSecondary">#757575</color>
+
+    <!-- Hint text (Light Gray) - Used for placeholder text -->
+    <color name="colorTextHint">#BDBDBD</color>
+
+    <!-- Text on primary color background (White) - Used on blue backgrounds -->
+    <color name="colorTextOnPrimary">#FFFFFF</color>
+
+    <!-- Text on accent color background (White) - Used on orange backgrounds -->
+    <color name="colorTextOnAccent">#FFFFFF</color>
+
+    <!-- ============================================================
+         STATUS COLORS - For showing status/feedback
+         Success, Warning, Error, Info
+         ============================================================ -->
+
+    <!-- Success (Green) - For positive feedback, completed tasks -->
+    <color name="colorSuccess">#4CAF50</color>
+
+    <!-- Warning (Orange) - For warnings, caution messages -->
+    <color name="colorWarning">#FF9800</color>
+
+    <!-- Error (Red) - For errors, failures, critical issues -->
+    <color name="colorError">#F44336</color>
+
+    <!-- Info (Blue) - For informational messages -->
+    <color name="colorInfo">#2196F3</color>
+</resources>

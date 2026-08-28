@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    star_field.xml - Starry background for Space Ball
+    Creates a dark space background with stars
+-->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <solid android:color="#16213E" />
+    <corners android:radius="16dp" />
+</shape>

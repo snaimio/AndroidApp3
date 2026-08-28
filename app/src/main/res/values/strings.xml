@@ -1,0 +1,228 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- ============================================================
+         APP NAME
+         ============================================================ -->
+    <string name="app_name">Sensor ToolBox</string>
+    <string name="dashboard_title">🧰 Sensor ToolBox</string>
+
+    <!-- ============================================================
+         STATUS BAR
+         ============================================================ -->
+    <string name="gps_locked">GPS: Locked</string>
+    <string name="gps_searching">GPS: Searching…</string>
+    <string name="gps_permission_needed">GPS: Permission needed</string>
+    <string name="sensors_active">Sensors: Active</string>
+
+    <!-- ============================================================
+         CATEGORY HEADERS
+         ============================================================ -->
+    <string name="category_location">📍 LOCATION &amp; NAVIGATION</string>
+    <string name="category_speed">📊 SPEED &amp; DISTANCE</string>
+    <string name="category_motion">📱 MOTION &amp; SENSORS</string>
+    <string name="category_detection">🔍 DETECTION</string>
+    <string name="category_astronomy">🌌 ASTRONOMY</string>
+
+    <!-- ============================================================
+         TOOL NAMES
+         ============================================================ -->
+    <string name="tool_compass">Digital Compass</string>
+    <string name="tool_gps">GPS Location</string>
+    <string name="tool_speedometer">Speedometer</string>
+    <string name="tool_metal_detector">Metal Detector</string>
+    <string name="tool_emf_meter">EMF Meter</string>
+    <string name="tool_gravity_meter">Gravity Meter</string>
+    <string name="tool_bubble_level">Bubble Level</string>
+    <string name="tool_distance_tracker">Distance Tracker</string>
+    <string name="tool_altimeter">Altimeter</string>
+    <string name="tool_space_ball">Space Ball</string>
+    <string name="tool_moon_phase">Moon Phase</string>
+    <string name="tool_shake_detector">Shake Detector</string>
+    <string name="tool_trail_tracker">Trail Tracker</string>
+    <string name="tool_geocaching">Geocaching Helper</string>
+    <string name="tool_star_finder">Star Finder</string>
+    <string name="tool_sun_tracker">Sun Tracker</string>
+
+    <!-- ============================================================
+         TOOL DESCRIPTIONS
+         ============================================================ -->
+    <string name="desc_gps">Coordinates &amp; Address</string>
+    <string name="desc_compass">Find Direction</string>
+    <string name="desc_trail_tracker">Record Hikes</string>
+    <string name="desc_geocaching">Find Caches</string>
+    <string name="desc_star_finder">Find Stars</string>
+    <string name="desc_speedometer">Check Speed</string>
+    <string name="desc_distance_tracker">Track Distance</string>
+    <string name="desc_altimeter">Check Altitude</string>
+    <string name="desc_gravity_meter">Measure Gravity</string>
+    <string name="desc_bubble_level">Check if Level</string>
+    <string name="desc_shake_detector">Detect Shakes</string>
+    <string name="desc_space_ball">Tilt to Move</string>
+    <string name="desc_metal_detector">Detect Metals</string>
+    <string name="desc_emf_meter">Electromagnetic Field</string>
+    <string name="desc_moon_phase">Check Moon Phase</string>
+    <string name="desc_sun_tracker">Sunrise &amp; Sunset</string>
+
+    <!-- ============================================================
+         ICONS
+         ============================================================ -->
+    <string name="icon_gps">📍</string>
+    <string name="icon_compass">🧭</string>
+    <string name="icon_trail">🥾</string>
+    <string name="icon_geocaching">🗺️</string>
+    <string name="icon_star">⭐</string>
+    <string name="icon_speedometer">🏎️</string>
+    <string name="icon_distance">📏</string>
+    <string name="icon_altimeter">⛰️</string>
+    <string name="icon_gravity">🌐</string>
+    <string name="icon_bubble">🔵</string>
+    <string name="icon_shake">🌀</string>
+    <string name="icon_space">🎮</string>
+    <string name="icon_metal">🧲</string>
+    <string name="icon_emf">📡</string>
+    <string name="icon_moon">🌙</string>
+    <string name="icon_sun">☀️</string>
+
+    <!-- ============================================================
+         BUTTON TEXT
+         ============================================================ -->
+    <string name="button_open">OPEN</string>
+    <string name="button_play">PLAY</string>
+    <string name="button_refresh">🔄 Refresh</string>
+    <string name="button_reset">🔄 Reset</string>
+    <string name="button_get_location">📍 Get Location</string>
+    <string name="button_recalibrate">🔄 Recalibrate</string>
+    <string name="button_start">▶️ Start</string>
+    <string name="button_stop">⏹️ Stop</string>
+
+    <!-- ============================================================
+         COMPASS
+         ============================================================ -->
+    <string name="compass_title">🧭 Digital Compass</string>
+    <string name="compass_bearing_default">0°</string>
+    <string name="compass_direction_default">North</string>
+    <string name="compass_waiting">Waiting for sensors…</string>
+    <string name="compass_content_description">Compass</string>
+
+    <!-- ============================================================
+         GPS LOCATION
+         ============================================================ -->
+    <string name="gps_location_title">📍 GPS Location</string>
+    <string name="gps_latitude">Latitude</string>
+    <string name="gps_longitude">Longitude</string>
+    <string name="gps_altitude">Altitude</string>
+    <string name="gps_address">Address</string>
+    <string name="gps_default_coordinate">—.——————</string>
+    <string name="gps_default_altitude">—.- m</string>
+    <string name="gps_getting_location">Getting location…</string>
+    <string name="gps_location_unavailable">Location unavailable</string>
+    <string name="gps_retrieving">Retrieving location…</string>
+    <string name="gps_no_address">No address found</string>
+
+    <!-- ============================================================
+         MOON PHASE
+         ============================================================ -->
+    <string name="moon_phase_title">🌙 Moon Phase</string>
+    <string name="moon_phase_loading_date">📅 Loading date…</string>
+    <string name="moon_phase_getting_location">📍 Getting location…</string>
+    <string name="moon_phase_next_full_moon">📅 Next Full Moon: —</string>
+    <string name="moon_phase_full_moon">Full Moon</string>
+    <string name="moon_phase_illumination">💡 Illumination: 100%</string>
+    <string name="moon_phase_emoji">🌕</string>
+
+    <!-- ============================================================
+         SUN TRACKER
+         ============================================================ -->
+    <string name="sun_tracker_title">☀️ Sun Tracker</string>
+    <string name="sun_tracker_getting_location">📍 Getting location…</string>
+    <string name="sun_tracker_refresh">🔄 Refresh</string>
+    <string name="sun_tracker_reset">🔁 Reset</string>
+    <string name="sun_tracker_sunrise_icon">🌅</string>
+    <string name="sun_tracker_sunrise_label">Sunrise</string>
+    <string name="sun_tracker_sunrise_default">—:— —</string>
+    <string name="sun_tracker_sunset_icon">🌇</string>
+    <string name="sun_tracker_sunset_label">Sunset</string>
+    <string name="sun_tracker_sunset_default">—:— —</string>
+    <string name="sun_tracker_day_length_icon">⏱️</string>
+    <string name="sun_tracker_day_length_label">Day Length</string>
+    <string name="sun_tracker_day_length_default">—h —m</string>
+    <string name="sun_tracker_sun_position_icon">☀️</string>
+    <string name="sun_tracker_sun_position_label">Sun Position</string>
+    <string name="sun_tracker_sun_position_default">Altitude: —° | Direction: —</string>
+
+    <!-- ============================================================
+         SPEEDOMETER
+         ============================================================ -->
+    <string name="speedometer_title">🏎️ Speedometer</string>
+    <string name="speedometer_start_tracking">Press Start to begin tracking…</string>
+    <string name="speedometer_tracking">📡 Tracking…</string>
+
+    <!-- ============================================================
+         DISTANCE TRACKER
+         ============================================================ -->
+    <string name="distance_tracker_title">📏 Distance Tracker</string>
+
+    <!-- ============================================================
+         ALTIMETER
+         ============================================================ -->
+    <string name="altimeter_title">⛰️ Altimeter</string>
+    <string name="altimeter_altitude">0 m</string>
+    <string name="altimeter_gain">📈 Gain</string>
+    <string name="altimeter_loss">📉 Loss</string>
+    <string name="altimeter_min">⬇️ Min</string>
+    <string name="altimeter_max">⬆️ Max</string>
+    <string name="altimeter_value_m">0 m</string>
+    <string name="altimeter_start">▶️ Start</string>
+    <string name="altimeter_stop">⏹️ Stop</string>
+    <string name="altimeter_reset">🔄 Reset</string>
+    <string name="altimeter_status_press_start">Press Start to begin tracking…</string>
+
+    <!-- ============================================================
+         METAL DETECTOR
+         ============================================================ -->
+    <string name="metal_detector_title">🧲 Metal Detector</string>
+    <string name="metal_detector_scanning">Scanning for metals…</string>
+    <string name="metal_detector_hint">Move phone near metal objects to detect them!</string>
+
+    <!-- ============================================================
+         EMF METER
+         ============================================================ -->
+    <string name="emf_meter_title">📡 EMF Meter</string>
+    <string name="emf_safe">✅ Safe - Low EMF</string>
+
+    <!-- ============================================================
+         GRAVITY METER
+         ============================================================ -->
+    <string name="gravity_meter_title">🌐 Gravity Meter</string>
+
+    <!-- ============================================================
+         BUBBLE LEVEL
+         ============================================================ -->
+    <string name="bubble_level_title">🔵 Bubble Level</string>
+    <string name="bubble_level_tilt">Tilt your phone to level it…</string>
+    <string name="bubble_level_level">✅ LEVEL! 🎉</string>
+
+    <!-- ============================================================
+         SHAKE DETECTOR
+         ============================================================ -->
+    <string name="shake_detector_title">🌀 Shake Detector</string>
+    <string name="shake_detector_hint">📱 Shake your phone to detect shakes!</string>
+    <string name="shake_detector_shakes">Shakes Detected</string>
+    <string name="shake_detector_last_shake">Last Shake</string>
+    <string name="shake_detector_intensity">Intensity</string>
+    <string name="shake_detector_default">—</string>
+    <string name="shake_detector_zero">0</string>
+
+    <!-- ============================================================
+         SPACE BALL
+         ============================================================ -->
+    <string name="space_ball_title">🎮 Space Ball</string>
+    <string name="space_ball_hint">📱 Tilt your phone to move the ball!</string>
+
+    <!-- ============================================================
+         TRAIL TRACKER
+         ============================================================ -->
+    <string name="trail_tracker_title">🥾 Trail Tracker</string>
+
+</resources>

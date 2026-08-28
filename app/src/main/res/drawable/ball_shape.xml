@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    ball_shape.xml - The ball that moves in Space Ball
+    A gradient ball with a 3D effect and glow
+-->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Outer glow -->
+    <item>
+        <shape android:shape="oval">
+            <solid android:color="#20FFFFFF" />
+            <size
+                android:width="70dp"
+                android:height="70dp" />
+        </shape>
+    </item>
+    <!-- Main ball -->
+    <item android:bottom="2dp" android:end="2dp" android:start="2dp" android:top="2dp">
+        <shape android:shape="oval">
+            <gradient
+                android:startColor="#FF6B6B"
+                android:endColor="#EE5A24"
+                android:type="radial"
+                android:gradientRadius="50%"
+                android:centerX="35%"
+                android:centerY="35%" />
+            <stroke
+                android:width="2dp"
+                android:color="#CCCCCC" />
+        </shape>
+    </item>
+    <!-- Shine effect (highlight) -->
+    <item android:bottom="30dp" android:end="30dp" android:start="8dp" android:top="4dp">
+        <shape android:shape="oval">
+            <solid android:color="#66FFFFFF" />
+        </shape>
+    </item>
+</layer-list>
