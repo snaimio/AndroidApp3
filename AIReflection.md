@@ -2,75 +2,76 @@
 
 ## 1. How Did You Use AI in This Assignment?
 
-### a. Summarize how you used AI-generated code overall.
+### a. Overall Summary
 
-I used AI a lot. I kept about 40% of the AI code as-is, modified about 40% to make it work, and used 20% just to understand what to do.
+I used AI a lot for this assignment. Honestly, I don't think I could have finished it without it. I kept asking AI for help whenever I got stuck.
 
-### b. Include one or two examples that show your process.
+I used AI for:
+- Generating code when I didn't know where to start
+- Explaining why things weren't working
+- Helping me understand the professor's code
+- Fixing errors
 
-**Example 1:** I asked AI: "How does the compass code in the LocationFinder tutorial work?" AI explained sensor fusion (accelerometer + magnetometer). I used the professor's code but added a rotating compass image and status text myself.
+### b. Examples of My Process
 
-**Example 2:** I asked AI: "How do I make a metal detector?" AI gave me code for `Sensor.TYPE_MAGNETIC_FIELD`. I kept the sensor code but added a progress bar and color changes myself.
+**Example 1 - Space Ball:**
+I wanted to make a ball move when you tilt the phone. I had no idea how to do this. I asked AI and got some code. I copied it into my project but it didn't work. The ball wouldn't move. I kept asking AI why and eventually figured out I needed to adjust the sensitivity values. I also had to add bounce physics myself.
 
-**What I didn't use:** AI suggested `TYPE_ORIENTATION` but I used `getRotationMatrix()` from the professor's tutorial instead.
+**Example 2 - Metal Detector:**
+I asked AI how to make a metal detector. It gave me code that reads the magnetic sensor. I copied it and it worked. I added a progress bar and color changes to make it look better.
 
-### c. If you encountered any concepts not yet covered in class, briefly explain how you researched or learned about them.
+**What I didn't use:** AI suggested using a library for physics, but I just used basic math because I didn't want to add extra dependencies.
 
-**Sensor Fusion:** I watched YouTube videos and re-read the LocationFinder tutorial to understand `getRotationMatrix()`.
+### c. New Concepts I Had to Learn
 
-**Geocoding:** The professor's tutorial showed it, but I researched the modern API for Android 13+.
-
-**Magnetic Field:** I read Android documentation to understand how the magnetometer detects metals.
+I had to learn several new things. I didn't know what sensor fusion was before this assignment. I had to look up how `getRotationMatrix()` works. I also had to learn how to use Git because I had never used it before.
 
 ---
 
 ## 2. How Did You Understand, Verify, and Adapt the Code?
 
-### a. Explain how you verified the correctness of any AI-generated code.
+### a. How I Verified My Code
 
-| Method | What I Did |
-|--------|------------|
-| Testing on my phone | Tested every tool on my physical device |
-| Logcat | Read error messages when the app crashed |
-| Log.d() | Printed sensor values to see what was happening |
-| Trial and error | Changed things until they worked |
+I tested everything on my phone. The emulator didn't work for sensors. I also used Logcat a lot to see what was happening when my app crashed.
 
-**Example:** For the compass, I added `Log.d()` to see the bearing value. I noticed it was in radians, so I converted it to degrees.
+**What I did to test:**
+- Walked around outside to test GPS
+- Rotated my phone to test the compass
+- Moved my phone near metal to test the metal detector
+- Shook my phone to test the shake detector
 
-### b. Describe one or two key changes or improvements you made.
+### b. Changes I Made
 
-**Change 1 - Compass Visibility:**
-```
-Problem: compass.png was invisible on dark background
-Fix: Added CardView with light background (#F5F5F5) behind it
-Reason: Image needed contrast to be visible
-```
+**Change 1 - Layout Fixes:**
+My buttons were all different sizes. I changed them to have the same height and width. It looked much better after.
 
-**Change 2 - Consistent Buttons:**
-```
-Problem: Buttons were different sizes
-Fix: Used fixed height (48dp) and minWidth (100dp) for all
-Reason: App looked messy with inconsistent buttons
-```
+**Change 2 - Compass Image:**
+I used the professor's code for the compass but added a rotating image because I wanted it to look nicer.
+
+**Change 3 - Dark Theme:**
+I changed the theme to dark because I preferred it. This required changing multiple layout files.
 
 ---
 
 ## 3. What Did You Learn or Get Better At Through This Work?
 
-### a. Reflect on at least one concept, practice, or skill where you feel you levelled up.
+### a. What I Learned
 
-**Sensor Lifecycle:** I finally understand why `onResume()` and `onPause()` are needed. Before, I just copied the code. Now I know it's to save battery by stopping sensors when the app is in the background.
+I learned that I should ask better questions to AI. Sometimes I just copied code without understanding it, and then it didn't work. When I asked AI to explain concepts instead of just giving me code, I understood things better.
 
-### b. Briefly describe what went well and what didn't.
+**Sensor Lifecycle:** I learned why we need `onResume()` and `onPause()` for sensors. The professor mentioned it, but I didn't really understand until I had to do it myself.
+
+### b. What Went Well and What Didn't
 
 **What went well:**
-- All 14 tools work
-- Compass sensor fusion works
-- GPS shows correct coordinates
+- Most of the tools work
+- The compass shows the correct direction
+- GPS shows my location
 
 **What didn't go well:**
-- Wasted time trying to use the emulator (no sensors)
-- Space Ball physics took a lot of tweaking
-- Kept getting confused with Git and Android Studio freezing
+- I wasted time trying to get the emulator to work
+- I kept getting confused with Git
+- Some tools took too much time (Space Ball)
+- I didn't understand sensor fusion at first
 
-**What I learned:** Test sensors on a physical device from the start. Use `Log.d()` to debug sensor values.
+**What I learned:** Ask AI for explanations, not just code. Test on a real phone early. Git commands get easier with practice.
