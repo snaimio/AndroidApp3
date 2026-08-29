@@ -5,14 +5,9 @@ package com.sheikhnaim.sensortoolbox.location
 // ============================================================
 import android.Manifest
 import android.content.pm.PackageManager
-import android.graphics.Canvas
-import android.graphics.Color
-import android.graphics.Paint
-import android.graphics.Path
 import android.location.Location
 import android.os.Bundle
 import android.os.SystemClock
-import android.view.View
 import android.widget.Button
 import android.widget.TextView
 import android.widget.Toast
@@ -32,13 +27,29 @@ import java.util.Locale
 /**
  * TrailTrackerActivity - Records and displays hiking trails
  *
+ * ============================================================
  * HOW IT WORKS:
+ * ============================================================
  * 1. Uses GPS to record location points
- * 2. Draws the trail path on a view
- * 3. Tracks distance, time, and elevation
+ * 2. Draws the trail path on a custom TrailView
+ * 3. Tracks distance, time, and elevation gain
  * 4. Start/Stop/Reset controls
+ *
+ * @author Sheikh Naim
+ * @since 1.0
  */
 class TrailTrackerActivity : AppCompatActivity() {
+
+    // ============================================================
+    // CONSTANTS
+    // ============================================================
+    companion object {
+        /** Minimum distance between points to record (meters) */
+        private const val MIN_DISTANCE_METERS = 1.0f
+
+        /** Update interval for location updates (milliseconds) */
+        private const val UPDATE_INTERVAL_MS = 2000L
+    }
 
     // ============================================================
     // GPS LOCATION CLIENT
@@ -48,10 +59,11 @@ class TrailTrackerActivity : AppCompatActivity() {
     // ============================================================
     // UI VIEWS
     // ============================================================
-    private lateinit var trailView: View
+    private lateinit var trailView: TrailView
     private lateinit var distanceText: TextView
     private lateinit var timeText: TextView
     private lateinit var elevationText: TextView
+    private lateinit var pointsCountText: TextView
     private lateinit var startButton: Button
     private lateinit var stopButton: Button
     private lateinit var resetButton: Button
@@ -59,24 +71,13 @@ class TrailTrackerActivity : AppCompatActivity() {
     // ============================================================
     // TRAIL DATA
     // ============================================================
-    private val locations = mutableListOf<Location>()  // All GPS points
-    private var totalDistance = 0f                      // Total distance in meters
-    private var elapsedTime = 0L                       // Elapsed time in milliseconds
-    private var startTime = 0L                         // When tracking started
-    private var isTracking = false                     // Whether tracking is active
-    private var startElevation = 0f                    // Starting elevation
-    private var elevationGain = 0f                     // Total elevation gain
-
-    // Drawing tools for the trail view
-    private var pathPaint = Paint().apply {
-        color = Color.BLUE
-        strokeWidth = 8f
-        style = Paint.Style.STROKE
-        strokeJoin = Paint.Join.ROUND
-        strokeCap = Paint.Cap.ROUND
-        isAntiAlias = true                             // ✅ FIXED: isAntiAlias
-    }
-    private var trailPath = Path()
+    private val locations = mutableListOf<Location>()
+    private var totalDistance = 0f
+    private var elapsedTime = 0L
+    private var startTime = 0L
+    private var isTracking = false
+    private var startElevation = 0f
+    private var elevationGain = 0f
 
     // ============================================================
     // LOCATION CALLBACK
@@ -99,7 +100,11 @@ class TrailTrackerActivity : AppCompatActivity() {
             if (permissions[Manifest.permission.ACCESS_FINE_LOCATION] == true) {
                 startTracking()
             } else {
-                Toast.makeText(this, "Location permission required", Toast.LENGTH_LONG).show()
+                Toast.makeText(
+                    this,
+                    getString(R.string.permission_denied_toast),
+                    Toast.LENGTH_LONG
+                ).show()
             }
         }
 
@@ -111,32 +116,61 @@ class TrailTrackerActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_trail_tracker)
 
-        // ============================================================
-        // STEP 1: Set up the Toolbar
-        // ============================================================
+        setupToolbar()
+        initializeViews()
+        initializeLocationClient()
+        setupClickListeners()
+        updateUI()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        if (isTracking) {
+            startLocationUpdates()
+        }
+    }
+
+    override fun onPause() {
+        super.onPause()
+        if (isTracking) {
+            stopTracking()
+        }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        if (isTracking) {
+            stopTracking()
+        }
+    }
+
+    // ============================================================
+    // INITIALIZATION METHODS
+    // ============================================================
+
+    private fun setupToolbar() {
         val toolbar = findViewById<Toolbar>(R.id.toolbar)
         setSupportActionBar(toolbar)
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
+        supportActionBar?.title = getString(R.string.trail_tracker_title)
+    }
 
-        // ============================================================
-        // STEP 2: Find all UI views
-        // ============================================================
+    private fun initializeViews() {
         trailView = findViewById(R.id.trailView)
         distanceText = findViewById(R.id.distanceText)
         timeText = findViewById(R.id.timeText)
         elevationText = findViewById(R.id.elevationText)
+        pointsCountText = findViewById(R.id.pointsCountText)
         startButton = findViewById(R.id.startButton)
         stopButton = findViewById(R.id.stopButton)
         resetButton = findViewById(R.id.resetButton)
+    }
 
-        // ============================================================
-        // STEP 3: Initialize the Fused Location Client
-        // ============================================================
+    private fun initializeLocationClient() {
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
+    }
 
-        // ============================================================
-        // STEP 4: Set up button click listeners
-        // ============================================================
+    private fun setupClickListeners() {
         startButton.setOnClickListener {
             if (checkPermission()) {
                 startTracking()
@@ -152,12 +186,6 @@ class TrailTrackerActivity : AppCompatActivity() {
         resetButton.setOnClickListener {
             resetTrail()
         }
-
-        // ============================================================
-        // STEP 5: Initialize UI
-        // ============================================================
-        updateUI()
-        trailView.invalidate()
     }
 
     // ============================================================
@@ -191,7 +219,7 @@ class TrailTrackerActivity : AppCompatActivity() {
         startTime = SystemClock.elapsedRealtime()
         elevationGain = 0f
         startElevation = 0f
-        trailPath.reset()
+        trailView.clearTrail()
         isTracking = true
 
         startButton.isEnabled = false
@@ -200,20 +228,30 @@ class TrailTrackerActivity : AppCompatActivity() {
 
         startLocationUpdates()
 
-        Toast.makeText(this, "✅ Trail recording started", Toast.LENGTH_SHORT).show()
+        Toast.makeText(
+            this,
+            getString(R.string.trail_started),
+            Toast.LENGTH_SHORT
+        ).show()
         updateUI()
     }
 
     private fun stopTracking() {
+        if (!isTracking) return
+
         isTracking = false
         stopLocationUpdates()
         elapsedTime = SystemClock.elapsedRealtime() - startTime
 
         startButton.isEnabled = true
         stopButton.isEnabled = false
-        resetButton.isEnabled = true
+        resetButton.isEnabled = locations.isNotEmpty()
 
-        Toast.makeText(this, "⏹️ Trail recording stopped", Toast.LENGTH_SHORT).show()
+        Toast.makeText(
+            this,
+            getString(R.string.trail_stopped),
+            Toast.LENGTH_SHORT
+        ).show()
         updateUI()
     }
 
@@ -223,16 +261,19 @@ class TrailTrackerActivity : AppCompatActivity() {
         elapsedTime = 0L
         elevationGain = 0f
         startElevation = 0f
-        trailPath.reset()
+        trailView.clearTrail()
         isTracking = false
 
         startButton.isEnabled = true
         stopButton.isEnabled = false
         resetButton.isEnabled = false
 
-        Toast.makeText(this, "🔄 Trail reset", Toast.LENGTH_SHORT).show()
+        Toast.makeText(
+            this,
+            getString(R.string.trail_reset),
+            Toast.LENGTH_SHORT
+        ).show()
         updateUI()
-        trailView.invalidate()
     }
 
     // ============================================================
@@ -244,10 +285,10 @@ class TrailTrackerActivity : AppCompatActivity() {
 
         val locationRequest = LocationRequest.Builder(
             Priority.PRIORITY_HIGH_ACCURACY,
-            2000
+            UPDATE_INTERVAL_MS
         ).apply {
-            setMinUpdateIntervalMillis(2000)
-            setMaxUpdateDelayMillis(5000)
+            setMinUpdateIntervalMillis(UPDATE_INTERVAL_MS)
+            setMaxUpdateDelayMillis(UPDATE_INTERVAL_MS * 2)
         }.build()
 
         fusedLocationClient.requestLocationUpdates(
@@ -265,60 +306,38 @@ class TrailTrackerActivity : AppCompatActivity() {
     // TRAIL DATA MANAGEMENT
     // ============================================================
 
-    /**
-     * addLocation - Adds a location point to the trail
-     */
     private fun addLocation(location: Location) {
         if (locations.isEmpty()) {
-            // First location - set starting elevation
-            startElevation = location.altitude.toFloat()   // ✅ FIXED: toFloat()
+            startElevation = location.altitude.toFloat()
             locations.add(location)
             updateUI()
             return
         }
 
         val lastLocation = locations.last()
-
-        // Calculate distance from last point
         val distance = lastLocation.distanceTo(location)
-        if (distance > 1.0) {  // Only add if more than 1 meter away
+
+        if (distance > MIN_DISTANCE_METERS) {
             totalDistance += distance
             locations.add(location)
 
-            // Calculate elevation gain
             val elevationDiff = location.altitude - lastLocation.altitude
             if (elevationDiff > 0) {
-                elevationGain += elevationDiff.toFloat()   // ✅ FIXED: toFloat()
+                elevationGain += elevationDiff.toFloat()
             }
 
-            // Update the trail path for drawing
-            updateTrailPath()
+            updateTrailView()
             updateUI()
         }
     }
 
-    /**
-     * updateTrailPath - Updates the path to draw on the trail view
-     */
-    private fun updateTrailPath() {
+    private fun updateTrailView() {
         if (locations.size < 2) return
 
-        trailPath.reset()
-        val first = locations.first()
-        val last = locations.last()
-
-        // Simple path drawing
-        trailPath.moveTo(100f, 100f)
-
-        for (i in 1 until locations.size) {
-            val prev = locations[i - 1]
-            val curr = locations[i]
-            val x = 100 + (i * 10).toFloat()
-            val y = 100 + ((prev.latitude - curr.latitude) * 1000).toFloat()
-            trailPath.lineTo(x, y)
+        val points = locations.map { location ->
+            Pair(location.latitude, location.longitude)
         }
-
-        trailView.invalidate()
+        trailView.updateTrail(points)
     }
 
     // ============================================================
@@ -326,42 +345,33 @@ class TrailTrackerActivity : AppCompatActivity() {
     // ============================================================
 
     private fun updateUI() {
+        // Update distance
         val distanceKm = totalDistance / 1000
-        distanceText.text = String.format(Locale.US, "%.1f km", distanceKm)
+        distanceText.text = String.format(Locale.US, "%.2f km", distanceKm)
 
+        // Update elapsed time
         if (isTracking) {
             elapsedTime = SystemClock.elapsedRealtime() - startTime
         }
         val seconds = elapsedTime / 1000
-        val minutes = seconds / 60
+        val hours = seconds / 3600
+        val minutes = (seconds % 3600) / 60
         val secs = seconds % 60
-        val hours = minutes / 60
-        val mins = minutes % 60
-        timeText.text = String.format("%02d:%02d:%02d", hours, mins, secs)
+        timeText.text = String.format(Locale.US, "%02d:%02d:%02d", hours, minutes, secs)
 
+        // Update elevation gain
         elevationText.text = String.format(Locale.US, "%.0f m", elevationGain)
+
+        // Update points count
+        pointsCountText.text = String.format(
+            Locale.US,
+            getString(R.string.trail_points_format),
+            locations.size
+        )
     }
 
     // ============================================================
-    // LIFECYCLE - Clean up
-    // ============================================================
-
-    override fun onPause() {
-        super.onPause()
-        if (isTracking) {
-            stopTracking()
-        }
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
-        if (isTracking) {
-            stopTracking()
-        }
-    }
-
-    // ============================================================
-    // BACK BUTTON NAVIGATION
+    // NAVIGATION METHODS
     // ============================================================
 
     override fun onSupportNavigateUp(): Boolean {

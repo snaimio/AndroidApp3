@@ -7,7 +7,7 @@
     - Dark theme (#1A1A2E)
     - Trail view, distance, time, elevation
     - Start: GREEN, Stop: RED, Reset: ORANGE
-    - NO green checkboxes
+    - Uses custom TrailView for drawing trails
 -->
 
 <androidx.constraintlayout.widget.ConstraintLayout
@@ -52,8 +52,11 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
-    <!-- TRAIL VIEW -->
-    <View
+    <!-- ============================================================
+         CUSTOM TRAIL VIEW - This is where the trail is drawn!
+         ============================================================ -->
+    <!-- ✅ FIXED: Using custom TrailView instead of regular View -->
+    <com.sheikhnaim.sensortoolbox.location.TrailView
         android:id="@+id/trailView"
         android:layout_width="0dp"
         android:layout_height="0dp"
@@ -67,7 +70,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
-    <!-- STATS -->
+    <!-- STATS CONTAINER -->
     <LinearLayout
         android:id="@+id/statsContainer"
         android:layout_width="0dp"
@@ -80,6 +83,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
 
+        <!-- Distance -->
         <LinearLayout
             android:layout_width="0dp"
             android:layout_height="wrap_content"
@@ -98,13 +102,14 @@
                 android:id="@+id/distanceText"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="0.0 km"
+                android:text="0.00 km"
                 android:textSize="18sp"
                 android:textStyle="bold"
                 android:textColor="#FFFFFF" />
 
         </LinearLayout>
 
+        <!-- Time -->
         <LinearLayout
             android:layout_width="0dp"
             android:layout_height="wrap_content"
@@ -130,6 +135,7 @@
 
         </LinearLayout>
 
+        <!-- Elevation -->
         <LinearLayout
             android:layout_width="0dp"
             android:layout_height="wrap_content"
@@ -156,6 +162,22 @@
         </LinearLayout>
 
     </LinearLayout>
+
+    <!-- POINTS COUNT - Shows how many GPS points recorded -->
+    <TextView
+        android:id="@+id/pointsCountText"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="📍 0 points"
+        android:textSize="12sp"
+        android:textColor="#666666"
+        android:gravity="center"
+        android:padding="4dp"
+        android:background="#1A1A2E"
+        app:layout_constraintTop_toBottomOf="@id/statsContainer"
+        app:layout_constraintBottom_toTopOf="@id/buttonContainer"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
 
     <!-- BUTTONS -->
     <LinearLayout

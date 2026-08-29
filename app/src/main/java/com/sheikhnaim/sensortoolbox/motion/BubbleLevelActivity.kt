@@ -1,5 +1,8 @@
 package com.sheikhnaim.sensortoolbox.motion
 
+// ============================================================
+// IMPORTS
+// ============================================================
 import android.hardware.Sensor
 import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
@@ -10,6 +13,7 @@ import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
 import androidx.cardview.widget.CardView
+import androidx.core.content.ContextCompat  // ✅ ADDED: For getColor() replacement
 import com.sheikhnaim.sensortoolbox.R
 import kotlin.math.atan2
 import kotlin.math.sqrt
@@ -17,18 +21,49 @@ import kotlin.math.sqrt
 /**
  * BubbleLevelActivity - A digital bubble level using the accelerometer
  *
+ * ============================================================
  * HOW IT WORKS:
+ * ============================================================
  * 1. Uses the Accelerometer to detect device tilt
  * 2. Calculates pitch (forward/backward tilt) and roll (left/right tilt)
  * 3. Moves a "bubble" on screen to show the tilt
  * 4. Shows "LEVEL!" when the device is flat
  *
+ * ============================================================
  * WHAT ARE PITCH AND ROLL?
+ * ============================================================
  * - Pitch: Rotation around the X-axis (forward/backward tilt)
  * - Roll: Rotation around the Y-axis (left/right tilt)
  * - When both are near 0°, the device is level!
+ *
+ * ============================================================
+ * HOW THE BUBBLE MOVES:
+ * ============================================================
+ * - The bubble moves in the OPPOSITE direction of tilt
+ * - If you tilt left, the bubble moves right (like a real bubble level)
+ * - The bubble position is clamped to stay within the container
+ *
+ * @author Sheikh Naim
+ * @since 1.0
  */
 class BubbleLevelActivity : AppCompatActivity(), SensorEventListener {
+
+    // ============================================================
+    // CONSTANTS
+    // ============================================================
+    companion object {
+        /** Size of the bubble in pixels */
+        private const val BUBBLE_SIZE_DP = 48
+
+        /** Margin from container edges in pixels */
+        private const val MARGIN_DP = 30
+
+        /** Maximum angle for full bubble movement (degrees) */
+        private const val MAX_ANGLE_DEGREES = 45f
+
+        /** Threshold angle to consider device level (degrees) */
+        private const val LEVEL_THRESHOLD_DEGREES = 2.0
+    }
 
     // ============================================================
     // SENSOR MANAGER
@@ -50,65 +85,87 @@ class BubbleLevelActivity : AppCompatActivity(), SensorEventListener {
     // ============================================================
     private var containerWidth = 0
     private var containerHeight = 0
-    private val BUBBLE_SIZE = 48
-    private val MARGIN = 30
+
+    // ============================================================
+    // LIFECYCLE METHODS
+    // ============================================================
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_bubble_level)
 
-        // ============================================================
-        // STEP 1: Set up the Toolbar
-        // ============================================================
+        setupToolbar()
+        initializeViews()
+        setupSensorManager()
+        getContainerDimensions()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        // Register sensor listener when activity is visible
+        accelerometer?.let {
+            sensorManager.registerListener(this, it, SensorManager.SENSOR_DELAY_UI)
+        }
+    }
+
+    override fun onPause() {
+        super.onPause()
+        // Unregister sensor listener to save battery
+        sensorManager.unregisterListener(this)
+    }
+
+    // ============================================================
+    // INITIALIZATION METHODS
+    // ============================================================
+
+    /**
+     * Sets up the toolbar with title and back navigation.
+     */
+    private fun setupToolbar() {
         val toolbar = findViewById<Toolbar>(R.id.toolbar)
         setSupportActionBar(toolbar)
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
+        supportActionBar?.title = getString(R.string.bubble_level_title)
+    }
 
-        // ============================================================
-        // STEP 2: Find all UI views
-        // ============================================================
+    /**
+     * Initializes all UI views from the layout.
+     */
+    private fun initializeViews() {
         bubble = findViewById(R.id.bubble)
         levelContainer = findViewById(R.id.levelContainer)
         pitchText = findViewById(R.id.pitchText)
         rollText = findViewById(R.id.rollText)
         levelStatusText = findViewById(R.id.levelStatusText)
+    }
 
-        // ============================================================
-        // STEP 3: Initialize the Sensor Manager
-        // ============================================================
+    /**
+     * Initializes the sensor manager and checks for accelerometer.
+     */
+    private fun setupSensorManager() {
         sensorManager = getSystemService(SENSOR_SERVICE) as SensorManager
         accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)
 
         if (accelerometer == null) {
-            levelStatusText.text = "❌ Accelerometer not available"
+            levelStatusText.text = getString(R.string.bubble_no_sensor)
+        } else {
+            levelStatusText.text = getString(R.string.bubble_tilt_hint)
         }
+    }
 
-        // ============================================================
-        // STEP 4: Get container dimensions after layout
-        // ============================================================
+    /**
+     * Gets container dimensions after layout is complete.
+     */
+    private fun getContainerDimensions() {
         levelContainer.post {
             containerWidth = levelContainer.width
             containerHeight = levelContainer.height
         }
     }
 
-    /**
-     * onResume - Register the sensor listener
-     */
-    override fun onResume() {
-        super.onResume()
-        accelerometer?.let {
-            sensorManager.registerListener(this, it, SensorManager.SENSOR_DELAY_UI)
-        }
-    }
-
-    /**
-     * onPause - Unregister the sensor listener
-     */
-    override fun onPause() {
-        super.onPause()
-        sensorManager.unregisterListener(this)
-    }
+    // ============================================================
+    // SENSOR EVENT LISTENER METHODS
+    // ============================================================
 
     /**
      * onSensorChanged - Called when accelerometer data changes
@@ -118,6 +175,8 @@ class BubbleLevelActivity : AppCompatActivity(), SensorEventListener {
      * 2. Calculates pitch (X-axis tilt) and roll (Y-axis tilt)
      * 3. Moves the bubble based on the angles
      * 4. Updates the UI with current values
+     *
+     * @param event The sensor event containing accelerometer data
      */
     override fun onSensorChanged(event: SensorEvent) {
         if (event.sensor.type == Sensor.TYPE_ACCELEROMETER) {
@@ -137,36 +196,59 @@ class BubbleLevelActivity : AppCompatActivity(), SensorEventListener {
             updateBubble(pitch.toFloat(), roll.toFloat())
 
             // Update the text displays
-            pitchText.text = String.format("Pitch: %.1f°", pitch)
-            rollText.text = String.format("Roll: %.1f°", roll)
+            pitchText.text = String.format(
+                getString(R.string.bubble_pitch_format),
+                pitch
+            )
+            rollText.text = String.format(
+                getString(R.string.bubble_roll_format),
+                roll
+            )
 
             // Check if the device is level
-            val isLevel = kotlin.math.abs(pitch) < 2.0 && kotlin.math.abs(roll) < 2.0
+            val isLevel = kotlin.math.abs(pitch) < LEVEL_THRESHOLD_DEGREES &&
+                    kotlin.math.abs(roll) < LEVEL_THRESHOLD_DEGREES
 
-            // Update the status text
-            levelStatusText.text = if (isLevel) {
-                "✅ LEVEL! 🎉"
-            } else {
-                "📱 Tilt your phone to level it"
-            }
-
-            // Change color based on level status
-            levelStatusText.setTextColor(
-                if (isLevel) {
-                    getColor(android.R.color.holo_green_dark)
-                } else {
-                    getColor(android.R.color.darker_gray)
-                }
-            )
+            // Update the status text and color
+            updateLevelStatus(isLevel)
         }
     }
 
     override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {
-        // Not needed
+        // Not needed for accelerometer
+    }
+
+    // ============================================================
+    // UI UPDATE METHODS
+    // ============================================================
+
+    /**
+     * Updates the level status text and color based on whether device is level.
+     *
+     * @param isLevel True if device is level, false otherwise
+     */
+    private fun updateLevelStatus(isLevel: Boolean) {
+        levelStatusText.text = if (isLevel) {
+            getString(R.string.bubble_level)
+        } else {
+            getString(R.string.bubble_tilt_hint)
+        }
+
+        val color = if (isLevel) {
+            ContextCompat.getColor(this, android.R.color.holo_green_dark)
+        } else {
+            ContextCompat.getColor(this, android.R.color.darker_gray)
+        }
+        levelStatusText.setTextColor(color)
     }
 
     /**
      * updateBubble - Moves the bubble based on pitch and roll angles
+     *
+     * The bubble moves in the OPPOSITE direction of tilt:
+     * - If you tilt left, the bubble moves right
+     * - If you tilt forward, the bubble moves backward
+     * - This mimics a real bubble level
      *
      * @param pitch The pitch angle in degrees (-90 to 90)
      * @param roll The roll angle in degrees (-90 to 90)
@@ -174,21 +256,31 @@ class BubbleLevelActivity : AppCompatActivity(), SensorEventListener {
     private fun updateBubble(pitch: Float, roll: Float) {
         // Get the container dimensions
         if (containerWidth == 0 || containerHeight == 0) {
+            // Try again if dimensions aren't ready
             levelContainer.post {
                 containerWidth = levelContainer.width
                 containerHeight = levelContainer.height
+                // Recursively call with same values after dimensions are set
+                updateBubble(pitch, roll)
             }
             return
         }
 
+        // Calculate bubble size and margin in pixels
+        val bubbleSize = dpToPixels(BUBBLE_SIZE_DP)
+        val margin = dpToPixels(MARGIN_DP)
+
         // Calculate the available space for the bubble to move
-        val maxX = (containerWidth - BUBBLE_SIZE) / 2 - MARGIN
-        val maxY = (containerHeight - BUBBLE_SIZE) / 2 - MARGIN
+        val maxX = (containerWidth - bubbleSize) / 2f - margin
+        val maxY = (containerHeight - bubbleSize) / 2f - margin
+
+        // If no space to move, return
+        if (maxX <= 0 || maxY <= 0) return
 
         // Map pitch and roll to bubble position
         // Clamp values to -1 to 1 range
-        val normalizedPitch = (pitch / 45f).coerceIn(-1f, 1f)
-        val normalizedRoll = (roll / 45f).coerceIn(-1f, 1f)
+        val normalizedPitch = (pitch / MAX_ANGLE_DEGREES).coerceIn(-1f, 1f)
+        val normalizedRoll = (roll / MAX_ANGLE_DEGREES).coerceIn(-1f, 1f)
 
         // Calculate the bubble position
         // Note: We negate the values because the bubble moves in the OPPOSITE direction of tilt
@@ -201,7 +293,21 @@ class BubbleLevelActivity : AppCompatActivity(), SensorEventListener {
     }
 
     // ============================================================
-    // BACK BUTTON NAVIGATION
+    // HELPER METHODS
+    // ============================================================
+
+    /**
+     * Converts dp to pixels.
+     *
+     * @param dp The value in dp
+     * @return The value in pixels
+     */
+    private fun dpToPixels(dp: Int): Float {
+        return dp * resources.displayMetrics.density
+    }
+
+    // ============================================================
+    // NAVIGATION METHODS
     // ============================================================
 
     override fun onSupportNavigateUp(): Boolean {

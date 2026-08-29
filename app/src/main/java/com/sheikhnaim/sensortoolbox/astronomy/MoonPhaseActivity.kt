@@ -1,27 +1,24 @@
 package com.sheikhnaim.sensortoolbox.astronomy
 
-// ============================================================
-// IMPORTS - These bring in the classes we need
-// ============================================================
-import android.Manifest                              // For location permission
-import android.content.pm.PackageManager            // To check if permission is granted
-import android.location.Location                    // For GPS location data
-import android.os.Bundle                            // For saving/restoring state
-import android.widget.Button                        // For button views
-import android.widget.TextView                      // For text views
-import android.widget.Toast                         // For showing toast messages
-import androidx.activity.result.contract.ActivityResultContracts // For permission handling
-import androidx.appcompat.app.AppCompatActivity      // Base class for our activity
-import androidx.appcompat.widget.Toolbar            // The top bar with back button
-import androidx.core.content.ContextCompat          // For checking permissions safely
-import com.google.android.gms.location.FusedLocationProviderClient // For GPS
-import com.google.android.gms.location.LocationServices // For getting location services
-import com.google.android.gms.location.Priority    // For location accuracy priority
-import com.sheikhnaim.sensortoolbox.R              // Resource IDs
-import java.text.SimpleDateFormat                   // For formatting dates
-import java.util.Calendar                           // For date calculations
-import java.util.Date                               // For date objects
-import java.util.Locale                             // For locale-specific formatting
+import android.Manifest
+import android.content.pm.PackageManager
+import android.location.Location
+import android.os.Bundle
+import android.widget.Button
+import android.widget.TextView
+import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.widget.Toolbar
+import androidx.core.content.ContextCompat
+import com.google.android.gms.location.FusedLocationProviderClient
+import com.google.android.gms.location.LocationServices
+import com.google.android.gms.location.Priority
+import com.sheikhnaim.sensortoolbox.R
+import java.text.SimpleDateFormat
+import java.util.Calendar
+import java.util.Date
+import java.util.Locale
 
 /**
  * MoonPhaseActivity - Shows the current moon phase
@@ -57,7 +54,7 @@ class MoonPhaseActivity : AppCompatActivity() {
     private lateinit var illuminationText: TextView    // Shows illumination percentage
     private lateinit var nextFullMoonText: TextView    // Shows next full moon date
     private lateinit var refreshButton: Button         // Refresh button
-    private lateinit var dateText: TextView            // Shows current date (ADDED)
+    private lateinit var dateText: TextView            // Shows current date
 
     // ============================================================
     // PERMISSION HANDLING - Requests location permission from user
@@ -67,8 +64,8 @@ class MoonPhaseActivity : AppCompatActivity() {
             if (permissions[Manifest.permission.ACCESS_FINE_LOCATION] == true) {
                 getLocationAndUpdate()
             } else {
-                Toast.makeText(this, "Location permission required", Toast.LENGTH_LONG).show()
-                locationText.text = "⚠️ Permission denied"
+                Toast.makeText(this, R.string.permission_denied_toast, Toast.LENGTH_LONG).show()
+                locationText.text = getString(R.string.permission_denied)
                 // Still show moon phase without location
                 updateMoonPhase(null)
             }
@@ -87,6 +84,7 @@ class MoonPhaseActivity : AppCompatActivity() {
         val toolbar = findViewById<Toolbar>(R.id.toolbar)
         setSupportActionBar(toolbar)
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
+        supportActionBar?.title = getString(R.string.moon_phase_title)
 
         // ============================================================
         // STEP 2: Find all UI views
@@ -97,7 +95,7 @@ class MoonPhaseActivity : AppCompatActivity() {
         illuminationText = findViewById(R.id.illuminationText)
         nextFullMoonText = findViewById(R.id.nextFullMoonText)
         refreshButton = findViewById(R.id.refreshButton)
-        dateText = findViewById(R.id.dateText)  // ADDED: Show current date
+        dateText = findViewById(R.id.dateText)
 
         // ============================================================
         // STEP 3: Initialize the Fused Location Client
@@ -117,6 +115,10 @@ class MoonPhaseActivity : AppCompatActivity() {
         checkPermissionAndUpdate()
     }
 
+    /**
+     * Checks for location permission and updates if granted.
+     * If permission is not granted, requests it from the user.
+     */
     private fun checkPermissionAndUpdate() {
         if (ContextCompat.checkSelfPermission(
                 this,
@@ -129,6 +131,11 @@ class MoonPhaseActivity : AppCompatActivity() {
         }
     }
 
+    /**
+     * Gets the current device location and updates moon data.
+     * Handles success, failure, and null location cases.
+     * Always shows moon phase even if location is unavailable.
+     */
     private fun getLocationAndUpdate() {
         if (ContextCompat.checkSelfPermission(
                 this,
@@ -140,7 +147,7 @@ class MoonPhaseActivity : AppCompatActivity() {
             return
         }
 
-        locationText.text = "📍 Getting location..."
+        locationText.text = getString(R.string.location_getting)
 
         fusedLocationClient.getCurrentLocation(
             Priority.PRIORITY_HIGH_ACCURACY,
@@ -150,13 +157,13 @@ class MoonPhaseActivity : AppCompatActivity() {
                 if (location != null) {
                     updateMoonPhase(location)
                 } else {
-                    locationText.text = "📍 Location unavailable"
+                    locationText.text = getString(R.string.location_unavailable_short)
                     // Still show moon phase without location
                     updateMoonPhase(null)
                 }
             }
-            .addOnFailureListener {
-                locationText.text = "📍 Error getting location"
+            .addOnFailureListener { _ ->
+                locationText.text = getString(R.string.location_error)
                 // Still show moon phase without location
                 updateMoonPhase(null)
             }
@@ -168,6 +175,8 @@ class MoonPhaseActivity : AppCompatActivity() {
      * IMPORTANT: The moon phase is based on DATE, not location!
      * Location is only used for display purposes.
      * This means refreshing will ALWAYS give the same result on the same day.
+     *
+     * @param location Current device location (optional - used only for display)
      */
     private fun updateMoonPhase(location: Location?) {
         // ============================================================
@@ -179,7 +188,7 @@ class MoonPhaseActivity : AppCompatActivity() {
 
         // Display the current date
         val dateFormat = SimpleDateFormat("EEEE, MMMM dd, yyyy", Locale.US)
-        dateText.text = "📅 ${dateFormat.format(date)}"
+        dateText.text = String.format(Locale.US, "📅 %s", dateFormat.format(date))
 
         // ============================================================
         // STEP 2: Calculate moon phase using the DATE
@@ -201,9 +210,9 @@ class MoonPhaseActivity : AppCompatActivity() {
         if (location != null) {
             val lat = location.latitude
             val lon = location.longitude
-            locationText.text = String.format("📍 %.4f, %.4f", lat, lon)
+            locationText.text = String.format(Locale.US, "📍 %.4f, %.4f", lat, lon)
         } else {
-            locationText.text = "📍 Location unknown"
+            locationText.text = getString(R.string.location_unknown)
         }
 
         // ============================================================
@@ -213,14 +222,22 @@ class MoonPhaseActivity : AppCompatActivity() {
         val (emoji, name, illumination) = getMoonPhaseInfo(phase)
         moonEmojiText.text = emoji
         moonPhaseNameText.text = name
-        illuminationText.text = String.format("💡 Illumination: %.1f%%", illumination)
+        illuminationText.text = String.format(
+            Locale.US,
+            getString(R.string.moon_phase_illumination_format),
+            illumination
+        )
 
         // ============================================================
         // STEP 5: Calculate and display next full moon
         // ============================================================
         val nextFullMoon = calculateNextFullMoon(date)
         val fullMoonFormat = SimpleDateFormat("MMM dd, yyyy", Locale.US)
-        nextFullMoonText.text = "📅 Next Full Moon: ${fullMoonFormat.format(nextFullMoon)}"
+        nextFullMoonText.text = String.format(
+            Locale.US,
+            getString(R.string.moon_phase_next_full_moon_format),
+            fullMoonFormat.format(nextFullMoon)
+        )
     }
 
     /**
@@ -264,6 +281,9 @@ class MoonPhaseActivity : AppCompatActivity() {
      *
      * Uses a known full moon date (January 10, 2020) as reference.
      * The lunar cycle is 29.53058867 days.
+     *
+     * @param currentDate The current date
+     * @return Date of the next full moon
      */
     private fun calculateNextFullMoon(currentDate: Date): Date {
         val calendar = Calendar.getInstance()
