@@ -3,93 +3,95 @@ package com.sheikhnaim.sensortoolbox.motion
 // ============================================================
 // IMPORTS
 // ============================================================
+import android.Manifest
+import android.content.pm.PackageManager
 import android.hardware.Sensor
 import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
+import android.location.Location
 import android.os.Bundle
 import android.os.SystemClock
 import android.widget.Button
 import android.widget.TextView
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
 import androidx.core.content.ContextCompat
+import com.google.android.gms.location.FusedLocationProviderClient
+import com.google.android.gms.location.LocationServices
+import com.google.android.gms.location.Priority
+import com.sheikhnaim.sensortoolbox.MapActivity
 import com.sheikhnaim.sensortoolbox.R
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 import kotlin.math.sqrt
 
 /**
- * ShakeDetectorActivity - Detects when the phone is shaken
+ * ShakeDetectorActivity - Detects device shakes using the 3-axis Accelerometer
+ * and geotags shake events on OpenStreetMap.
  *
- * ============================================================
- * HOW IT WORKS:
- * ============================================================
- * 1. Uses the Accelerometer to detect sudden movements
- * 2. Calculates the total acceleration (like Gravity Meter)
- * 3. When acceleration exceeds a threshold, counts it as a shake
- * 4. Prevents multiple detections in quick succession (debounce)
- * 5. Tracks intensity of the shake
- *
- * ============================================================
- * WHAT IS A SHAKE?
- * ============================================================
- * - A sudden change in acceleration (like you're shaking the phone)
- * - The phone moves quickly in one direction, then another
- * - The total acceleration exceeds a certain threshold
- *
- * ============================================================
- * WHY DEBOUNCE?
- * ============================================================
- * - One shake can trigger multiple sensor readings
- * - We only count one shake per 500ms to avoid duplicates
- *
- * ============================================================
- * INTENSITY LEVELS:
- * ============================================================
- * - 💥 Very High: total > 30 m/s²
- * - 🔥 High: total > 25 m/s²
- * - 📶 Medium: total > 20 m/s²
- * - 📶 Low: total <= 20 m/s²
- *
- * @author Sheikh Naim
- * @since 1.0
+ * HOW IT WORKS (Physics & Algorithm):
+ * 1. Reads raw accelerometer values: x, y, z (in m/s²).
+ * 2. Calculates overall 3D acceleration vector magnitude:
+ *    magnitude = sqrt(x² + y² + z²)
+ * 3. Compares magnitude against SHAKE_THRESHOLD (15.0 m/s²).
+ *    Normal Earth gravity when resting is ~9.81 m/s², so anything above 15 m/s²
+ *    indicates active physical shaking.
+ * 4. Applies a DEBOUNCE_TIME_MS (500ms) lock to prevent a single physical shake
+ *    from triggering multiple count events.
+ * 5. Tags current GPS latitude & longitude and saves to a historical list so users
+ *    can inspect where shakes occurred on the OpenStreetMap interactive view.
  */
 class ShakeDetectorActivity : AppCompatActivity(), SensorEventListener {
 
+    /**
+     * Data class to store a single geotagged shake event.
+     */
+    data class ShakeEvent(
+        val lat: Double,
+        val lon: Double,
+        val count: Int,
+        val intensity: String,
+        val timestamp: Long
+    )
+
     // ============================================================
-    // CONSTANTS
+    // CONSTANTS & THRESHOLDS
     // ============================================================
     companion object {
-        /** Minimum time between shakes to avoid duplicates (milliseconds) */
+        /** Minimum delay (ms) between recorded shakes to debounce oscillations */
         private const val DEBOUNCE_TIME_MS = 500L
 
-        /** Minimum acceleration to count as a shake (m/s²) */
+        /** Acceleration threshold (m/s²) required to qualify as a shake */
         private const val SHAKE_THRESHOLD = 15f
 
-        /** Threshold for "Very High" intensity (m/s²) */
+        /** Thresholds for classifying shake severity */
         private const val INTENSITY_VERY_HIGH = 30f
-
-        /** Threshold for "High" intensity (m/s²) */
         private const val INTENSITY_HIGH = 25f
-
-        /** Threshold for "Medium" intensity (m/s²) */
         private const val INTENSITY_MEDIUM = 20f
     }
 
     // ============================================================
-    // SENSOR MANAGER
+    // SENSOR MANAGER & LOCATION SERVICES
     // ============================================================
     private lateinit var sensorManager: SensorManager
     private var accelerometer: Sensor? = null
+    private lateinit var fusedLocationClient: FusedLocationProviderClient
+    private var lastLocation: Location? = null
+    private val shakeLocations = mutableListOf<ShakeEvent>()
 
     // ============================================================
-    // UI VIEWS - All are TextViews
+    // UI VIEWS
     // ============================================================
     private lateinit var shakeCountText: TextView
     private lateinit var lastShakeText: TextView
     private lateinit var intensityText: TextView
     private lateinit var statusText: TextView
     private lateinit var resetButton: Button
+    private lateinit var viewMapButton: Button
 
     // ============================================================
     // SHAKE DETECTION DATA
@@ -97,9 +99,12 @@ class ShakeDetectorActivity : AppCompatActivity(), SensorEventListener {
     private var shakeCount = 0          // Total shakes detected
     private var lastShakeTime = 0L      // When the last shake occurred
 
-    // ============================================================
-    // LIFECYCLE METHODS
-    // ============================================================
+    private val locationPermissionLauncher =
+        registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { permissions ->
+            if (permissions[Manifest.permission.ACCESS_FINE_LOCATION] == true) {
+                fetchLocation()
+            }
+        }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -108,7 +113,9 @@ class ShakeDetectorActivity : AppCompatActivity(), SensorEventListener {
         setupToolbar()
         initializeViews()
         setupSensorManager()
-        setupResetButton()
+        setupButtons()
+        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
+        fetchLocation()
     }
 
     override fun onResume() {
@@ -116,6 +123,7 @@ class ShakeDetectorActivity : AppCompatActivity(), SensorEventListener {
         accelerometer?.let {
             sensorManager.registerListener(this, it, SensorManager.SENSOR_DELAY_UI)
         }
+        fetchLocation()
     }
 
     override fun onPause() {
@@ -123,15 +131,14 @@ class ShakeDetectorActivity : AppCompatActivity(), SensorEventListener {
         sensorManager.unregisterListener(this)
     }
 
-    // ============================================================
-    // INITIALIZATION METHODS
-    // ============================================================
-
     private fun setupToolbar() {
         val toolbar = findViewById<Toolbar>(R.id.toolbar)
         setSupportActionBar(toolbar)
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
         supportActionBar?.title = getString(R.string.shake_detector_title)
+        toolbar.setNavigationOnClickListener {
+            finish()
+        }
     }
 
     private fun initializeViews() {
@@ -140,14 +147,61 @@ class ShakeDetectorActivity : AppCompatActivity(), SensorEventListener {
         intensityText = findViewById(R.id.intensityText)
         statusText = findViewById(R.id.statusText)
         resetButton = findViewById(R.id.resetButton)
+        viewMapButton = findViewById(R.id.viewMapButton)
     }
 
+    private fun setupButtons() {
+        resetButton.setOnClickListener {
+            shakeCount = 0
+            shakeLocations.clear()
+            shakeCountText.text = getString(R.string.shake_zero)
+            lastShakeText.text = getString(R.string.shake_default)
+            intensityText.text = getString(R.string.shake_default)
+            statusText.text = getString(R.string.shake_reset_message)
+            Toast.makeText(this, R.string.shake_reset_toast, Toast.LENGTH_SHORT).show()
+        }
+
+        viewMapButton.setOnClickListener {
+            val intent = android.content.Intent(this, MapActivity::class.java)
+            if (shakeLocations.isNotEmpty()) {
+                val lats = DoubleArray(shakeLocations.size) { shakeLocations[it].lat }
+                val lons = DoubleArray(shakeLocations.size) { shakeLocations[it].lon }
+                val sdf = SimpleDateFormat("HH:mm:ss", Locale.getDefault())
+                val titles = Array(shakeLocations.size) { "🌀 Shake #${shakeLocations[it].count} (${shakeLocations[it].intensity})" }
+                val snippets = Array(shakeLocations.size) { "Time: ${sdf.format(Date(shakeLocations[it].timestamp))} | Lat: ${String.format(Locale.US, "%.5f", shakeLocations[it].lat)}, Lon: ${String.format(Locale.US, "%.5f", shakeLocations[it].lon)}" }
+
+                intent.putExtra(MapActivity.EXTRA_SPOT_LATS, lats)
+                intent.putExtra(MapActivity.EXTRA_SPOT_LONS, lons)
+                intent.putExtra(MapActivity.EXTRA_SPOT_TITLES, titles)
+                intent.putExtra(MapActivity.EXTRA_SPOT_SNIPPETS, snippets)
+                intent.putExtra(MapActivity.EXTRA_TITLE, "🌀 Shake Locations Map")
+            } else if (lastLocation != null) {
+                intent.putExtra(MapActivity.EXTRA_LATITUDE, lastLocation!!.latitude)
+                intent.putExtra(MapActivity.EXTRA_LONGITUDE, lastLocation!!.longitude)
+                intent.putExtra(MapActivity.EXTRA_TITLE, "🌀 Shake Detector ($shakeCount shakes)")
+                intent.putExtra(MapActivity.EXTRA_SNIPPET, "Intensity: ${intensityText.text}")
+            }
+            startActivity(intent)
+        }
+    }
+
+    private fun fetchLocation() {
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+            fusedLocationClient.getCurrentLocation(Priority.PRIORITY_HIGH_ACCURACY, null)
+                .addOnSuccessListener { loc ->
+                    if (loc != null) {
+                        lastLocation = loc
+                    }
+                }
+        } else {
+            locationPermissionLauncher.launch(arrayOf(Manifest.permission.ACCESS_FINE_LOCATION))
+        }
+    }
     private fun setupSensorManager() {
         sensorManager = getSystemService(SENSOR_SERVICE) as SensorManager
         accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)
 
         if (accelerometer == null) {
-            // ✅ Using getString() and assigning to TextView.text
             statusText.text = getString(R.string.shake_no_sensor)
             Toast.makeText(
                 this,
@@ -155,28 +209,7 @@ class ShakeDetectorActivity : AppCompatActivity(), SensorEventListener {
                 Toast.LENGTH_LONG
             ).show()
         } else {
-            // ✅ Using getString() and assigning to TextView.text
             statusText.text = getString(R.string.shake_hint)
-        }
-    }
-
-    private fun setupResetButton() {
-        resetButton.setOnClickListener {
-            // Reset all shake data
-            shakeCount = 0
-            lastShakeTime = 0L
-
-            // ✅ Reset all TextViews using getString()
-            shakeCountText.text = getString(R.string.shake_zero)
-            lastShakeText.text = getString(R.string.shake_default)
-            intensityText.text = getString(R.string.shake_default)
-            statusText.text = getString(R.string.shake_reset_message)
-
-            Toast.makeText(
-                this,
-                getString(R.string.shake_reset_toast),
-                Toast.LENGTH_SHORT
-            ).show()
         }
     }
 
@@ -222,7 +255,18 @@ class ShakeDetectorActivity : AppCompatActivity(), SensorEventListener {
             else -> getString(R.string.shake_intensity_low)
         }
 
-        // ✅ Update all TextViews using getString()
+        lastLocation?.let { loc ->
+            shakeLocations.add(
+                ShakeEvent(
+                    loc.latitude,
+                    loc.longitude,
+                    shakeCount,
+                    intensityTextValue,
+                    System.currentTimeMillis()
+                )
+            )
+        }
+
         shakeCountText.text = shakeCount.toString()
         lastShakeText.text = getString(R.string.shake_now)
         intensityText.text = intensityTextValue

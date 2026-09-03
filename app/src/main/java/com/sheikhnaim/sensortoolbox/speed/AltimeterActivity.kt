@@ -54,6 +54,7 @@ class AltimeterActivity : AppCompatActivity() {
     private lateinit var startButton: Button
     private lateinit var stopButton: Button
     private lateinit var resetButton: Button
+    private lateinit var viewMapButton: Button
 
     // ============================================================
     // TRACKING DATA - Using Double for altitude values
@@ -66,6 +67,7 @@ class AltimeterActivity : AppCompatActivity() {
     private var previousAltitude = 0.0         // Previous altitude reading (Double)
     private var isTracking = false             // Whether tracking is active
     private var firstReading = true            // First reading of the session
+    private var lastLocation: Location? = null
 
     // ============================================================
     // LOCATION CALLBACK - Receives location updates
@@ -73,6 +75,7 @@ class AltimeterActivity : AppCompatActivity() {
     private val locationCallback = object : LocationCallback() {
         override fun onLocationResult(result: LocationResult) {
             result.lastLocation?.let { location ->
+                lastLocation = location
                 // Get altitude from GPS (meters above sea level)
                 // location.altitude returns a Double
                 val altitude = location.altitude
@@ -139,6 +142,9 @@ class AltimeterActivity : AppCompatActivity() {
         val toolbar = findViewById<Toolbar>(R.id.toolbar)
         setSupportActionBar(toolbar)
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
+        toolbar.setNavigationOnClickListener {
+            finish()
+        }
 
         // ============================================================
         // STEP 2: Find all UI views
@@ -152,6 +158,7 @@ class AltimeterActivity : AppCompatActivity() {
         startButton = findViewById(R.id.startButton)
         stopButton = findViewById(R.id.stopButton)
         resetButton = findViewById(R.id.resetButton)
+        viewMapButton = findViewById(R.id.viewMapButton)
 
         // ============================================================
         // STEP 3: Initialize the Fused Location Client
@@ -175,6 +182,17 @@ class AltimeterActivity : AppCompatActivity() {
 
         resetButton.setOnClickListener {
             resetTracking()
+        }
+
+        viewMapButton.setOnClickListener {
+            val intent = android.content.Intent(this, com.sheikhnaim.sensortoolbox.MapActivity::class.java)
+            if (lastLocation != null) {
+                intent.putExtra(com.sheikhnaim.sensortoolbox.MapActivity.EXTRA_LATITUDE, lastLocation!!.latitude)
+                intent.putExtra(com.sheikhnaim.sensortoolbox.MapActivity.EXTRA_LONGITUDE, lastLocation!!.longitude)
+                intent.putExtra(com.sheikhnaim.sensortoolbox.MapActivity.EXTRA_TITLE, "🏔️ Altitude: ${String.format(Locale.US, "%.1f m", currentAltitude)}")
+                intent.putExtra(com.sheikhnaim.sensortoolbox.MapActivity.EXTRA_SNIPPET, "Gain: +${String.format(Locale.US, "%.1f m", elevationGain)} | Loss: -${String.format(Locale.US, "%.1f m", elevationLoss)}")
+            }
+            startActivity(intent)
         }
 
         // ============================================================

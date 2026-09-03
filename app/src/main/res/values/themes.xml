@@ -1,121 +1,37 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-    ============================================================
-    themes.xml - App Theme Configuration
-    ============================================================
-    This file defines ALL visual styles for the app.
-
-    WHAT IS A THEME?
-    - A collection of styles that apply to the entire app
-    - Controls colors, fonts, spacing, animations
-    - Can be overridden per activity
-
-    WHY WE USE THEMES:
-    - Consistent look and feel across the app
-    - Easy to switch between Light/Dark mode
-    - Professional appearance
-    - Maintainable (change one place, update everywhere)
-
-    HOW THEMES WORK:
-    1. Main theme applies to ALL activities
-    2. Individual activities can override with their own theme
-    3. Splash theme is only for the splash screen
--->
 <resources>
-
-    <!-- ============================================================
-         MAIN THEME - Used by ALL activities (except Splash)
-         ============================================================
-         parent="Theme.MaterialComponents.DayNight.NoActionBar"
-         - MaterialComponents: Modern Material Design
-         - DayNight: Automatically switches Light/Dark
-         - NoActionBar: We use our own Toolbar
-    -->
     <style name="Theme.SensorToolBox" parent="Theme.MaterialComponents.DayNight.NoActionBar">
-
-        <!-- ============================================================
-             COLOR ATTRIBUTES - Define the app's color scheme
-             ============================================================ -->
-
-        <!-- Primary brand color - Used for toolbars, headers -->
         <item name="colorPrimary">@color/colorPrimary</item>
-
-        <!-- Darker version of primary - Used for status bar -->
         <item name="colorPrimaryVariant">@color/colorPrimaryDark</item>
-
-        <!-- Text color on primary backgrounds - White text on blue -->
         <item name="colorOnPrimary">@color/colorTextOnPrimary</item>
-
-        <!-- Secondary/Accent color - Used for buttons, highlights -->
         <item name="colorSecondary">@color/colorAccent</item>
-
-        <!-- Darker version of secondary - Used for pressed states -->
         <item name="colorSecondaryVariant">@color/colorAccentDark</item>
-
-        <!-- Text color on secondary backgrounds - White text on orange -->
         <item name="colorOnSecondary">@color/colorTextOnAccent</item>
-
-        <!-- ============================================================
-             SYSTEM BAR COLORS - Status bar and navigation bar
-             ============================================================ -->
-
-        <!-- Status bar color - The top bar with time/battery -->
+        <item name="android:colorBackground">@color/colorBackground</item>
+        <item name="colorSurface">@color/colorSurface</item>
+        <item name="colorOnBackground">@color/colorTextPrimary</item>
+        <item name="colorOnSurface">@color/colorTextPrimary</item>
+        <item name="colorError">@color/colorError</item>
+        <item name="colorOnError">@color/colorTextOnError</item>
         <item name="android:statusBarColor">@color/colorPrimaryDark</item>
-
-        <!-- Status bar icons color - false = white icons, true = dark icons -->
-        <item name="android:windowLightStatusBar">false</item>
-
-        <!-- Navigation bar color - The bottom bar with back/home buttons -->
         <item name="android:navigationBarColor">@color/colorPrimaryDark</item>
-
-        <!-- ============================================================
-             BACKGROUND - App background
-             ============================================================ -->
-
-        <!-- Window background - The main screen background -->
+        <item name="android:windowLightStatusBar">false</item>
         <item name="android:windowBackground">@color/colorBackground</item>
-
+        <item name="android:textColorPrimary">@color/colorTextPrimary</item>
+        <item name="android:textColorSecondary">@color/colorTextSecondary</item>
     </style>
 
-    <!-- ============================================================
-         SPLASH THEME - ONLY used by SplashActivity
-         ============================================================
-         This theme is applied ONLY to the splash screen.
-         It makes the splash screen full screen with custom background.
-
-         WHY A SEPARATE THEME?
-         - Splash screen needs to be full screen (no status bar)
-         - Splash screen has a different background
-         - Splash screen should not show the toolbar
-    -->
-    <style name="Theme.SensorToolBox.Splash" parent="Theme.SensorToolBox">
-
-        <!-- ============================================================
-             SPLASH BACKGROUND - The logo/design shown during loading
-             ============================================================ -->
-
-        <!-- Window background - Uses the splash_screen drawable -->
-        <item name="android:windowBackground">@drawable/splash_screen</item>
-
-        <!-- Status bar matches splash background (deep blue) -->
-        <item name="android:statusBarColor">@color/colorPrimary</item>
-
-        <!-- Navigation bar matches splash background (deep blue) -->
-        <item name="android:navigationBarColor">@color/colorPrimary</item>
-
-        <!-- ============================================================
-             FULL SCREEN - Hide status bar
-             ============================================================ -->
-
-        <!-- Full screen mode - Hides status bar for immersive look -->
-        <item name="android:windowFullscreen">true</item>
-
-        <!-- Hide the action bar (no toolbar on splash) -->
-        <item name="android:windowActionBar">false</item>
-
-        <!-- Hide the title bar -->
-        <item name="android:windowNoTitle">true</item>
-
+    <!-- Toolbar theme for white title, navigation icon, and three-dot overflow icon -->
+    <style name="SensorToolBox.Toolbar" parent="ThemeOverlay.AppCompat.Dark.ActionBar">
+        <item name="colorControlNormal">#FFFFFF</item>
+        <item name="android:textColorPrimary">#FFFFFF</item>
+        <item name="actionMenuTextColor">#FFFFFF</item>
     </style>
 
+    <!-- Popup theme for three-dot overflow menu: light background with dark readable text -->
+    <style name="SensorToolBox.PopupMenu" parent="ThemeOverlay.AppCompat.Light">
+        <item name="android:textColor">@color/colorTextPrimary</item>
+        <item name="android:textColorPrimary">@color/colorTextPrimary</item>
+        <item name="android:colorBackground">#FFFFFF</item>
+    </style>
 </resources>

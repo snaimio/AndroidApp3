@@ -131,6 +131,9 @@ class GravityMeterActivity : AppCompatActivity(), SensorEventListener {
         setSupportActionBar(toolbar)
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
         supportActionBar?.title = getString(R.string.gravity_meter_title)
+        toolbar.setNavigationOnClickListener {
+            finish()
+        }
     }
 
     /**

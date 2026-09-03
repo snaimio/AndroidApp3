@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    ============================================================
+    dashboard_menu.xml - Toolbar Menu for Dashboard
+    ============================================================
+    MENU ITEMS:
+    1. Live Location - Continuous location updates
+    2. Map Location - OpenStreetMap display
+    (Compass is already available as a tool in the dashboard)
+-->
+
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <!-- MENU ITEM 1: Live Location -->
+    <item
+        android:id="@+id/action_live_location"
+        android:icon="@android:drawable/ic_menu_mylocation"
+        android:title="📍 Live Location"
+        app:showAsAction="never" />
+
+    <!-- MENU ITEM 2: Map Location -->
+    <item
+        android:id="@+id/action_map"
+        android:icon="@android:drawable/ic_menu_mapmode"
+        android:title="🗺️ Map Location"
+        app:showAsAction="never" />
+
+</menu>

@@ -14,13 +14,10 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:fitsSystemWindows="true"
-    android:paddingTop="?attr/actionBarSize"
-    android:paddingStart="16dp"
-    android:paddingEnd="16dp"
-    android:paddingBottom="16dp"
     android:background="#1A1A2E"
     tools:context=".motion.SpaceBallActivity">
 
@@ -30,7 +27,9 @@
         android:layout_width="0dp"
         android:layout_height="?attr/actionBarSize"
         android:background="?attr/colorPrimary"
-        android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
+        android:theme="@style/SensorToolBox.Toolbar"
+        app:theme="@style/SensorToolBox.Toolbar"
+        app:popupTheme="@style/SensorToolBox.PopupMenu"
         app:title="Space Ball"
         app:titleTextColor="#FFFFFF"
         app:navigationIcon="?attr/homeAsUpIndicator"
@@ -73,7 +72,7 @@
             android:layout_width="56dp"
             android:layout_height="56dp"
             android:background="@drawable/ball_shape"
-            android:layout_gravity="center" />
+            android:layout_gravity="top|start" />
 
     </androidx.cardview.widget.CardView>
 

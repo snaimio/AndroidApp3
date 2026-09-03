@@ -1,16 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
     splash_screen.xml - Splash Screen Background
-    This is a simpler version that works without the bitmap issue
+    This version works without bitmap issues
 -->
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+
     <!-- Solid background color -->
     <item android:drawable="@color/colorPrimary" />
 
-    <!-- App icon in the center -->
+    <!-- App icon in the center - Using @drawable/ic_launcher instead of @mipmap -->
+    <!-- If you don't have an icon, comment this out -->
     <item>
         <bitmap
-            android:src="@mipmap/ic_launcher"
+            android:src="@drawable/ic_launcher_foreground"
             android:gravity="center" />
     </item>
+
 </layer-list>

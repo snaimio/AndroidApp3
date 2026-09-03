@@ -160,6 +160,9 @@ class SpaceBallActivity : AppCompatActivity(), SensorEventListener {
         setSupportActionBar(toolbar)
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
         supportActionBar?.title = getString(R.string.space_ball_title)
+        toolbar.setNavigationOnClickListener {
+            finish()
+        }
     }
 
     /**

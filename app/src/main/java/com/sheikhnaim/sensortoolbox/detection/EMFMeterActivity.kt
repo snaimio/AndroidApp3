@@ -3,114 +3,110 @@ package com.sheikhnaim.sensortoolbox.detection
 // ============================================================
 // IMPORTS
 // ============================================================
+import android.Manifest
+import android.content.pm.PackageManager
 import android.hardware.Sensor
 import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
+import android.location.Location
 import android.os.Bundle
 import android.view.View
 import android.widget.Button
 import android.widget.TextView
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
 import androidx.core.content.ContextCompat
+import com.google.android.gms.location.FusedLocationProviderClient
+import com.google.android.gms.location.LocationServices
+import com.google.android.gms.location.Priority
+import com.sheikhnaim.sensortoolbox.MapActivity
 import com.sheikhnaim.sensortoolbox.R
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 import kotlin.math.sqrt
 
 /**
- * EMFMeterActivity - Measures Electromagnetic Field strength
+ * EMFMeterActivity - Measures Electromagnetic Field (EMF) strength in microTeslas (µT)
+ * using the hardware Magnetometer / Geomagnetic sensor and geotags hotspots on OpenStreetMap.
  *
- * ============================================================
- * HOW IT WORKS:
- * ============================================================
- * 1. Uses the Magnetometer to detect magnetic fields
- * 2. Calculates total EMF strength: sqrt(x² + y² + z²)
- * 3. Displays as µT (microtesla)
- * 4. Shows color-coded safety status
- *
- * ============================================================
- * SAFETY LEVELS:
- * ============================================================
- * - < 0.3 µT: ✅ Safe (typical background)
- * - 0.3 - 1.0 µT: ⚠️ Moderate (near electronics)
- * - 1.0 - 5.0 µT: 🔶 High (near power lines)
- * - > 5.0 µT: 🔴 Very High (dangerous levels)
- *
- * ============================================================
- * CALIBRATION:
- * ============================================================
- * The app calibrates on first reading to remove Earth's
- * magnetic field baseline. Press "Reset" to recalibrate.
- *
- * @author Sheikh Naim
- * @since 1.0
+ * HOW IT WORKS (Physics & Sensor Math):
+ * 1. The hardware magnetic field sensor measures magnetic flux density along the X, Y, and Z axes.
+ * 2. Total ambient field magnitude is computed via:
+ *    B = sqrt(Bx² + By² + Bz²)
+ * 3. Earth's natural geomagnetic background field ranges from ~30µT to ~60µT.
+ * 4. This activity allows establishing a baseline calibration to zero out ambient
+ *    geomagnetic background and isolate active EMF radiating from electrical appliances,
+ *    wiring, motors, and electronic devices.
+ * 5. Users can save geotagged EMF hotspots to view on the OpenStreetMap interactive canvas.
  */
 class EMFMeterActivity : AppCompatActivity(), SensorEventListener {
 
+    /**
+     * Data class to store an EMF Hotspot reading with timestamp and GPS coordinates.
+     */
+    data class EMFHotspot(
+        val lat: Double,
+        val lon: Double,
+        val emfValue: Float,
+        val status: String,
+        val timestamp: Long
+    )
+
     // ============================================================
-    // CONSTANTS
+    // CONSTANTS & EMF RADIATION THRESHOLDS
     // ============================================================
     companion object {
-        /** Maximum EMF value for full bar display (µT) */
+        /** Maximum relative EMF reading mapped to full scale gauge bar (µT) */
         private const val MAX_EMF_VALUE = 3.0f
 
-        /** Safe EMF threshold (µT) - below this is considered safe */
+        /** Safe exposure baseline threshold (µT) */
         private const val THRESHOLD_SAFE = 0.3f
 
-        /** Moderate EMF threshold (µT) - between safe and moderate */
+        /** Moderate exposure warning threshold (µT) */
         private const val THRESHOLD_MODERATE = 1.0f
 
-        /** High EMF threshold (µT) - between moderate and high */
+        /** High radiation alert threshold (µT) */
         private const val THRESHOLD_HIGH = 5.0f
     }
 
     // ============================================================
-    // SENSOR MANAGER
+    // SENSOR MANAGER & LOCATION
     // ============================================================
-    /** Manages sensor registration and updates */
     private lateinit var sensorManager: SensorManager
-
-    /** The magnetic field sensor (magnetometer) */
     private var magneticSensor: Sensor? = null
+    private lateinit var fusedLocationClient: FusedLocationProviderClient
+    private var lastLocation: Location? = null
+    private val emfHotspots = mutableListOf<EMFHotspot>()
+    private var currentEmfValue: Float = 0f
 
     // ============================================================
     // UI VIEWS
     // ============================================================
-    /** Displays the current EMF value in µT */
     private lateinit var emfValueText: TextView
-
-    /** Visual progress bar showing EMF strength */
     private lateinit var emfBar: View
-
-    /** Shows safety status (Safe/Moderate/High/Very High) */
     private lateinit var statusText: TextView
-
-    /** Shows additional safety information */
     private lateinit var safetyInfoText: TextView
-
-    /** Button to recalibrate the sensor */
     private lateinit var resetButton: Button
+    private lateinit var saveHotspotButton: Button
+    private lateinit var viewMapButton: Button
 
     // ============================================================
     // DATA
     // ============================================================
-    /** Baseline magnetic field value (removes Earth's field) */
     private var baseline = 0f
-
-    /** True if calibration has been performed */
     private var isCalibrated = false
 
-    // ============================================================
-    // LIFECYCLE METHODS
-    // ============================================================
+    private val locationPermissionLauncher =
+        registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { permissions ->
+            if (permissions[Manifest.permission.ACCESS_FINE_LOCATION] == true) {
+                fetchLocation()
+            }
+        }
 
-    /**
-     * Called when the activity is created.
-     * Sets up the UI, sensors, and button listeners.
-     *
-     * @param savedInstanceState Previously saved state (if any)
-     */
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_emf_meter)
@@ -118,88 +114,120 @@ class EMFMeterActivity : AppCompatActivity(), SensorEventListener {
         setupToolbar()
         initializeViews()
         setupSensorManager()
-        setupResetButton()
+        setupButtons()
+        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
+        fetchLocation()
     }
 
-    /**
-     * Called when the activity becomes visible.
-     * Registers the sensor listener to start receiving updates.
-     */
     override fun onResume() {
         super.onResume()
-        // Register sensor listener when activity is visible
         magneticSensor?.let {
             sensorManager.registerListener(this, it, SensorManager.SENSOR_DELAY_UI)
         }
+        fetchLocation()
     }
 
-    /**
-     * Called when the activity is no longer visible.
-     * Unregisters the sensor listener to save battery.
-     */
     override fun onPause() {
         super.onPause()
-        // Unregister sensor listener to save battery
         sensorManager.unregisterListener(this)
     }
 
-    // ============================================================
-    // INITIALIZATION METHODS
-    // ============================================================
-
-    /**
-     * Sets up the toolbar with back navigation and title.
-     */
     private fun setupToolbar() {
         val toolbar = findViewById<Toolbar>(R.id.toolbar)
         setSupportActionBar(toolbar)
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
         supportActionBar?.title = getString(R.string.emf_meter_title)
+        toolbar.setNavigationOnClickListener {
+            finish()
+        }
     }
 
-    /**
-     * Initializes all UI view references from the layout.
-     */
     private fun initializeViews() {
         emfValueText = findViewById(R.id.emfValueText)
         emfBar = findViewById(R.id.emfBar)
         statusText = findViewById(R.id.statusText)
         safetyInfoText = findViewById(R.id.safetyInfoText)
         resetButton = findViewById(R.id.resetButton)
+        saveHotspotButton = findViewById(R.id.saveHotspotButton)
+        viewMapButton = findViewById(R.id.viewMapButton)
     }
 
-    /**
-     * Initializes the sensor manager and checks for magnetometer availability.
-     * Shows appropriate error messages if the sensor is not available.
-     */
     private fun setupSensorManager() {
         sensorManager = getSystemService(SENSOR_SERVICE) as SensorManager
         magneticSensor = sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD)
 
         if (magneticSensor == null) {
-            // Magnetometer not available - show error
-            emfValueText.text = getString(R.string.emf_no_sensor)
-            statusText.text = getString(R.string.emf_sensor_unavailable)
+            statusText.text = getString(R.string.emf_no_sensor)
+            safetyInfoText.text = getString(R.string.emf_sensor_unavailable)
             Toast.makeText(this, R.string.emf_sensor_not_found, Toast.LENGTH_LONG).show()
-        } else {
-            // Sensor available - start scanning
-            statusText.text = getString(R.string.emf_scanning)
         }
     }
 
-    /**
-     * Sets up the reset/recalibrate button.
-     * Resets the baseline calibration to current readings.
-     */
-    private fun setupResetButton() {
+    private fun setupButtons() {
         resetButton.setOnClickListener {
-            // Reset calibration to current values
-            baseline = 0f
-            isCalibrated = false
-            Toast.makeText(this, R.string.emf_calibrated, Toast.LENGTH_SHORT).show()
-            statusText.text = getString(R.string.emf_calibrated_scanning)
-            safetyInfoText.text = getString(R.string.emf_resetting_baseline)
+            resetCalibration()
         }
+
+        saveHotspotButton.setOnClickListener {
+            if (lastLocation != null) {
+                val spot = EMFHotspot(
+                    lastLocation!!.latitude,
+                    lastLocation!!.longitude,
+                    currentEmfValue,
+                    statusText.text.toString(),
+                    System.currentTimeMillis()
+                )
+                emfHotspots.add(spot)
+                Toast.makeText(this, "📍 EMF Hotspot logged! (${String.format(Locale.US, "%.2f µT", currentEmfValue)})", Toast.LENGTH_SHORT).show()
+            } else {
+                Toast.makeText(this, "Acquiring GPS location...", Toast.LENGTH_SHORT).show()
+                fetchLocation()
+            }
+        }
+
+        viewMapButton.setOnClickListener {
+            val intent = android.content.Intent(this, MapActivity::class.java)
+            if (emfHotspots.isNotEmpty()) {
+                val lats = DoubleArray(emfHotspots.size) { emfHotspots[it].lat }
+                val lons = DoubleArray(emfHotspots.size) { emfHotspots[it].lon }
+                val sdf = SimpleDateFormat("HH:mm:ss", Locale.getDefault())
+                val titles = Array(emfHotspots.size) { "📡 EMF Spot #${it + 1} (${String.format(Locale.US, "%.2f µT", emfHotspots[it].emfValue)})" }
+                val snippets = Array(emfHotspots.size) { "${emfHotspots[it].status} | Time: ${sdf.format(Date(emfHotspots[it].timestamp))}" }
+
+                intent.putExtra(MapActivity.EXTRA_SPOT_LATS, lats)
+                intent.putExtra(MapActivity.EXTRA_SPOT_LONS, lons)
+                intent.putExtra(MapActivity.EXTRA_SPOT_TITLES, titles)
+                intent.putExtra(MapActivity.EXTRA_SPOT_SNIPPETS, snippets)
+                intent.putExtra(MapActivity.EXTRA_TITLE, "📡 EMF Hotspots Map")
+            } else if (lastLocation != null) {
+                intent.putExtra(MapActivity.EXTRA_LATITUDE, lastLocation!!.latitude)
+                intent.putExtra(MapActivity.EXTRA_LONGITUDE, lastLocation!!.longitude)
+                intent.putExtra(MapActivity.EXTRA_TITLE, "📡 EMF Meter (${String.format(Locale.US, "%.2f µT", currentEmfValue)})")
+                intent.putExtra(MapActivity.EXTRA_SNIPPET, statusText.text.toString())
+            }
+            startActivity(intent)
+        }
+    }
+
+    private fun fetchLocation() {
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+            fusedLocationClient.getCurrentLocation(Priority.PRIORITY_HIGH_ACCURACY, null)
+                .addOnSuccessListener { loc ->
+                    if (loc != null) {
+                        lastLocation = loc
+                    }
+                }
+        } else {
+            locationPermissionLauncher.launch(arrayOf(Manifest.permission.ACCESS_FINE_LOCATION))
+        }
+    }
+
+    private fun resetCalibration() {
+        baseline = 0f
+        isCalibrated = false
+        Toast.makeText(this, R.string.emf_calibrated, Toast.LENGTH_SHORT).show()
+        statusText.text = getString(R.string.emf_calibrated_scanning)
+        safetyInfoText.text = getString(R.string.emf_resetting_baseline)
     }
 
     // ============================================================
@@ -235,6 +263,7 @@ class EMFMeterActivity : AppCompatActivity(), SensorEventListener {
 
             // Calculate relative value (removes Earth's magnetic field)
             val relativeValue = (total - baseline).coerceAtLeast(0f)
+            currentEmfValue = relativeValue
 
             updateUI(relativeValue, total)
         }

@@ -14,8 +14,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:fitsSystemWindows="true"
-    android:paddingTop="?attr/actionBarSize"
-    android:background="#F5F5F5"
+    android:background="#1A1A2E"
     tools:context=".DashboardActivity">
 
     <!-- TOOLBAR -->
@@ -24,7 +23,9 @@
         android:layout_width="0dp"
         android:layout_height="?attr/actionBarSize"
         android:background="?attr/colorPrimary"
-        android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
+        android:theme="@style/SensorToolBox.Toolbar"
+        app:theme="@style/SensorToolBox.Toolbar"
+        app:popupTheme="@style/SensorToolBox.PopupMenu"
         app:title="@string/dashboard_title"
         app:titleTextColor="#FFFFFF"
         app:layout_constraintTop_toTopOf="parent"
@@ -36,33 +37,29 @@
         android:id="@+id/toolRecyclerView"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:padding="12dp"
+        android:padding="10dp"
         android:clipToPadding="false"
-        android:background="#F5F5F5"
+        android:background="#1A1A2E"
         app:layout_constraintTop_toBottomOf="@id/toolbar"
         app:layout_constraintBottom_toTopOf="@id/statusBar"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
-    <!-- ============================================================
-         STATUS BAR - Clean with colored dots (NO EMOJIS!)
-         ============================================================ -->
+    <!-- STATUS BAR -->
     <LinearLayout
         android:id="@+id/statusBar"
         android:layout_width="0dp"
-        android:layout_height="48dp"
+        android:layout_height="44dp"
         android:orientation="horizontal"
         android:gravity="center_vertical"
         android:paddingStart="16dp"
         android:paddingEnd="16dp"
-        android:background="#E0E0E0"
+        android:background="#22223B"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
 
-        <!-- ============================================================
-             GPS STATUS - Left side with colored dot
-             ============================================================ -->
+        <!-- GPS STATUS -->
         <LinearLayout
             android:layout_width="0dp"
             android:layout_height="wrap_content"
@@ -70,7 +67,6 @@
             android:orientation="horizontal"
             android:gravity="center_vertical">
 
-            <!-- Colored dot (replaces green checkbox) -->
             <View
                 android:id="@+id/gpsDot"
                 android:layout_width="8dp"
@@ -84,20 +80,17 @@
                 android:layout_height="wrap_content"
                 android:text="@string/gps_locked"
                 android:textSize="12sp"
-                android:textColor="#333333" />
+                android:textColor="#E0E0E0" />
 
         </LinearLayout>
 
-        <!-- ============================================================
-             SENSORS STATUS - Right side with colored dot
-             ============================================================ -->
+        <!-- SENSORS STATUS -->
         <LinearLayout
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:orientation="horizontal"
-            android:gravity="center_vertical"
-            android:justificationMode="inter_word">
+            android:gravity="center_vertical|end">
 
             <TextView
                 android:id="@+id/sensorStatusText"
@@ -105,10 +98,9 @@
                 android:layout_height="wrap_content"
                 android:text="@string/sensors_active"
                 android:textSize="12sp"
-                android:textColor="#333333"
+                android:textColor="#E0E0E0"
                 android:layout_marginEnd="6dp" />
 
-            <!-- Colored dot (replaces green checkbox) -->
             <View
                 android:id="@+id/sensorDot"
                 android:layout_width="8dp"

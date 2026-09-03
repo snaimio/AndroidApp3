@@ -54,6 +54,7 @@ class DistanceTrackerActivity : AppCompatActivity() {
     private lateinit var startButton: Button
     private lateinit var stopButton: Button
     private lateinit var resetButton: Button
+    private lateinit var viewMapButton: Button
 
     // ============================================================
     // TRACKING DATA
@@ -63,6 +64,7 @@ class DistanceTrackerActivity : AppCompatActivity() {
     private var startTime = 0L              // When tracking started
     private var isTracking = false          // Whether tracking is active
     private var lastLocation: Location? = null // Previous GPS location
+    private val routePoints = mutableListOf<Location>()
 
     private var speedSum = 0f               // Sum of speeds for average
     private var speedCount = 0              // Number of speed readings
@@ -77,6 +79,7 @@ class DistanceTrackerActivity : AppCompatActivity() {
                     // Calculate distance between last and current location
                     val distance = lastLocation!!.distanceTo(location)
                     totalDistance += distance
+                    routePoints.add(location)
 
                     // Calculate speed from this location
                     val speed = location.speed * 3.6f  // m/s → km/h
@@ -84,6 +87,8 @@ class DistanceTrackerActivity : AppCompatActivity() {
                         speedSum += speed
                         speedCount++
                     }
+                } else if (isTracking) {
+                    routePoints.add(location)
                 }
                 // Save this location for the next update
                 lastLocation = location
@@ -119,6 +124,9 @@ class DistanceTrackerActivity : AppCompatActivity() {
         val toolbar = findViewById<Toolbar>(R.id.toolbar)
         setSupportActionBar(toolbar)
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
+        toolbar.setNavigationOnClickListener {
+            finish()
+        }
 
         // ============================================================
         // STEP 2: Find all UI views
@@ -130,6 +138,7 @@ class DistanceTrackerActivity : AppCompatActivity() {
         startButton = findViewById(R.id.startButton)
         stopButton = findViewById(R.id.stopButton)
         resetButton = findViewById(R.id.resetButton)
+        viewMapButton = findViewById(R.id.viewMapButton)
 
         // ============================================================
         // STEP 3: Initialize the Fused Location Client
@@ -153,6 +162,22 @@ class DistanceTrackerActivity : AppCompatActivity() {
 
         resetButton.setOnClickListener {
             resetTracking()
+        }
+
+        viewMapButton.setOnClickListener {
+            val intent = android.content.Intent(this, com.sheikhnaim.sensortoolbox.MapActivity::class.java)
+            if (routePoints.isNotEmpty()) {
+                val lats = DoubleArray(routePoints.size) { routePoints[it].latitude }
+                val lons = DoubleArray(routePoints.size) { routePoints[it].longitude }
+                intent.putExtra(com.sheikhnaim.sensortoolbox.MapActivity.EXTRA_TRAIL_LATS, lats)
+                intent.putExtra(com.sheikhnaim.sensortoolbox.MapActivity.EXTRA_TRAIL_LONS, lons)
+                intent.putExtra(com.sheikhnaim.sensortoolbox.MapActivity.EXTRA_TITLE, "📏 Distance Route (${String.format(Locale.US, "%.2f km", totalDistance / 1000f)})")
+            } else if (lastLocation != null) {
+                intent.putExtra(com.sheikhnaim.sensortoolbox.MapActivity.EXTRA_LATITUDE, lastLocation!!.latitude)
+                intent.putExtra(com.sheikhnaim.sensortoolbox.MapActivity.EXTRA_LONGITUDE, lastLocation!!.longitude)
+                intent.putExtra(com.sheikhnaim.sensortoolbox.MapActivity.EXTRA_TITLE, "📏 Distance Tracker Position")
+            }
+            startActivity(intent)
         }
 
         // ============================================================
@@ -242,6 +267,7 @@ class DistanceTrackerActivity : AppCompatActivity() {
         speedSum = 0f
         speedCount = 0
         isTracking = false
+        routePoints.clear()
 
         // Update button states
         startButton.isEnabled = true

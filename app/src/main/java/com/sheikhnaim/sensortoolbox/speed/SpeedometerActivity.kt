@@ -50,6 +50,7 @@ class SpeedometerActivity : AppCompatActivity() {
     private lateinit var statusText: TextView
     private lateinit var startButton: Button
     private lateinit var stopButton: Button
+    private lateinit var viewMapButton: Button
 
     // ============================================================
     // TRACKING DATA
@@ -59,6 +60,7 @@ class SpeedometerActivity : AppCompatActivity() {
     private var speedCount = 0         // Number of readings taken
     private var currentSpeed = 0f      // Current speed (km/h)
     private var isTracking = false     // Whether tracking is active
+    private var lastLocation: Location? = null
 
     // ============================================================
     // LOCATION CALLBACK - Receives location updates
@@ -66,6 +68,7 @@ class SpeedometerActivity : AppCompatActivity() {
     private val locationCallback = object : LocationCallback() {
         override fun onLocationResult(result: LocationResult) {
             result.lastLocation?.let { location ->
+                lastLocation = location
                 // Speed from GPS in m/s, convert to km/h
                 val speedMps = location.speed
                 currentSpeed = speedMps * 3.6f  // m/s → km/h
@@ -101,6 +104,9 @@ class SpeedometerActivity : AppCompatActivity() {
         val toolbar = findViewById<Toolbar>(R.id.toolbar)
         setSupportActionBar(toolbar)
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
+        toolbar.setNavigationOnClickListener {
+            finish()
+        }
 
         // ============================================================
         // STEP 2: Find all UI views
@@ -111,6 +117,7 @@ class SpeedometerActivity : AppCompatActivity() {
         statusText = findViewById(R.id.statusText)
         startButton = findViewById(R.id.startButton)
         stopButton = findViewById(R.id.stopButton)
+        viewMapButton = findViewById(R.id.viewMapButton)
 
         // ============================================================
         // STEP 3: Initialize the Fused Location Client
@@ -131,6 +138,21 @@ class SpeedometerActivity : AppCompatActivity() {
         stopButton.setOnClickListener {
             stopTracking()
         }
+
+        viewMapButton.setOnClickListener {
+            val intent = android.content.Intent(this, com.sheikhnaim.sensortoolbox.MapActivity::class.java)
+            if (lastLocation != null) {
+                intent.putExtra(com.sheikhnaim.sensortoolbox.MapActivity.EXTRA_LATITUDE, lastLocation!!.latitude)
+                intent.putExtra(com.sheikhnaim.sensortoolbox.MapActivity.EXTRA_LONGITUDE, lastLocation!!.longitude)
+                intent.putExtra(com.sheikhnaim.sensortoolbox.MapActivity.EXTRA_TITLE, "🏎️ Speed: ${String.format(Locale.US, "%.1f km/h", currentSpeed)}")
+                intent.putExtra(com.sheikhnaim.sensortoolbox.MapActivity.EXTRA_SNIPPET, "Max: ${String.format(Locale.US, "%.1f km/h", maxSpeed)} | Avg: ${String.format(Locale.US, "%.1f km/h", if (speedCount > 0) totalSpeed / speedCount else 0f)}")
+            }
+            startActivity(intent)
+        }
+
+        // ============================================================
+        // STEP 5: Initialize UI
+        // ============================================================
 
         // ============================================================
         // STEP 5: Initialize UI

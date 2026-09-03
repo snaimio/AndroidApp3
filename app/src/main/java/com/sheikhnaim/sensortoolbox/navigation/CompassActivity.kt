@@ -8,6 +8,7 @@ import android.hardware.SensorEvent                // Contains sensor data when 
 import android.hardware.SensorEventListener        // Interface to listen for sensor changes
 import android.hardware.SensorManager              // Manages sensors on the device
 import android.os.Bundle                           // For saving/restoring state
+import android.widget.Button                       // For interactive buttons
 import android.widget.ImageView                    // To display the compass image
 import android.widget.TextView                     // To display text on screen
 import android.widget.Toast                        // For showing toast messages
@@ -49,6 +50,7 @@ class CompassActivity : AppCompatActivity(), SensorEventListener {
     private lateinit var bearingText: TextView        // Shows the bearing in degrees
     private lateinit var directionText: TextView      // Shows cardinal direction (N, NE, etc.)
     private lateinit var statusText: TextView         // Shows status messages
+    private lateinit var viewMapButton: Button
 
     // ============================================================
     // SENSOR DATA - Arrays to store sensor readings
@@ -61,53 +63,42 @@ class CompassActivity : AppCompatActivity(), SensorEventListener {
     // Flags to track if we have received data from each sensor
     private var haveGravity = false          // True when we have accelerometer data
     private var haveMagnetic = false         // True when we have magnetometer data
+    private var currentAzimuth = 0f
 
     // ============================================================
     // LIFECYCLE METHODS - When the activity starts/stops
     // ============================================================
 
-    /**
-     * onCreate - Called when the activity is first created
-     *
-     * This sets up:
-     * - The layout (UI)
-     * - The toolbar (top bar with back button)
-     * - All UI views
-     * - The sensor manager and sensors
-     */
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_compass)
 
-        // ============================================================
-        // STEP 1: SET UP THE TOOLBAR
-        // The toolbar has the title and back button
-        // ============================================================
         val toolbar = findViewById<Toolbar>(R.id.toolbar)
         setSupportActionBar(toolbar)
-        supportActionBar?.setDisplayHomeAsUpEnabled(true)  // Show back button
+        supportActionBar?.setDisplayHomeAsUpEnabled(true)
+        toolbar.setNavigationOnClickListener {
+            finish()
+        }
 
-        // ============================================================
-        // STEP 2: FIND ALL UI VIEWS
-        // Each view is found by its ID from activity_compass.xml
-        // ============================================================
         compassImage = findViewById(R.id.compassImage)
         bearingText = findViewById(R.id.bearingText)
         directionText = findViewById(R.id.directionText)
         statusText = findViewById(R.id.statusText)
+        viewMapButton = findViewById(R.id.viewMapButton)
 
-        // ============================================================
-        // STEP 3: INITIALIZE THE SENSOR MANAGER
-        // ============================================================
+        viewMapButton.setOnClickListener {
+            val intent = android.content.Intent(this, com.sheikhnaim.sensortoolbox.MapActivity::class.java)
+            intent.putExtra(com.sheikhnaim.sensortoolbox.MapActivity.EXTRA_BEARING, currentAzimuth)
+            intent.putExtra(com.sheikhnaim.sensortoolbox.MapActivity.EXTRA_HEADING_LOCK, true)
+            intent.putExtra(com.sheikhnaim.sensortoolbox.MapActivity.EXTRA_TITLE, "🧭 Compass Heading: ${currentAzimuth.toInt()}° (${directionText.text})")
+            startActivity(intent)
+        }
+
         sensorManager = getSystemService(SENSOR_SERVICE) as SensorManager
 
-        // Get the default sensors from the device
         accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)
         magnetometer = sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD)
 
-        // ============================================================
-        // STEP 4: CHECK IF SENSORS ARE AVAILABLE
-        // ============================================================
         if (accelerometer == null) {
             statusText.text = "⚠️ Accelerometer not available"
             Toast.makeText(this, "Accelerometer not found", Toast.LENGTH_LONG).show()
@@ -252,6 +243,7 @@ class CompassActivity : AppCompatActivity(), SensorEventListener {
      * @param bearingFloat The bearing as a float for rotation
      */
     private fun updateUI(bearing: Int, bearingFloat: Float) {
+        currentAzimuth = bearingFloat
         // Display the bearing in degrees
         bearingText.text = "$bearing°"
 

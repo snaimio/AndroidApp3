@@ -3,162 +3,221 @@ package com.sheikhnaim.sensortoolbox.location
 // ============================================================
 // IMPORTS - These bring in the classes we need
 // ============================================================
-import android.Manifest                              // For location permission
-import android.content.pm.PackageManager            // To check if permission is granted
-import android.location.Address                     // For address data from Geocoder
-import android.location.Geocoder                   // For converting coordinates to address
-import android.location.Location                   // For GPS location data
-import android.os.Build                            // For checking Android version
-import android.os.Bundle                           // For saving/restoring state
-import android.widget.Button                       // For button views
-import android.widget.TextView                     // For text views
-import android.widget.Toast                        // For showing toast messages
-import androidx.activity.result.contract.ActivityResultContracts // For permission handling
-import androidx.appcompat.app.AppCompatActivity     // Base class for our activity
-import androidx.appcompat.widget.Toolbar           // The top bar with back button
-import androidx.core.content.ContextCompat          // For checking permissions safely
-import com.google.android.gms.location.FusedLocationProviderClient // For GPS
-import com.google.android.gms.location.LocationServices // For getting location services
-import com.google.android.gms.location.Priority    // For location accuracy priority
-import com.sheikhnaim.sensortoolbox.R              // Resource IDs (layouts, strings, etc.)
-import java.util.Locale                             // For locale-specific formatting
+import android.Manifest
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.content.Intent
+import android.content.pm.PackageManager
+import android.location.Address
+import android.location.Geocoder
+import android.location.Location
+import android.net.Uri
+import android.os.Build
+import android.os.Bundle
+import android.widget.Button
+import android.widget.TextView
+import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.widget.Toolbar
+import androidx.core.content.ContextCompat
+import com.google.android.gms.location.FusedLocationProviderClient
+import com.google.android.gms.location.LocationServices
+import com.google.android.gms.location.Priority
+import com.sheikhnaim.sensortoolbox.MapActivity
+import com.sheikhnaim.sensortoolbox.R
+import org.osmdroid.config.Configuration
+import org.osmdroid.tileprovider.tilesource.TileSourceFactory
+import org.osmdroid.util.GeoPoint
+import org.osmdroid.views.MapView
+import org.osmdroid.views.overlay.Marker
+import java.util.Locale
 
 /**
- * LocationActivity - GPS Location Tool
+ * LocationActivity - High-Accuracy GPS Location Tool & Coordinate Inspector
  *
- * ============================================================
- * HOW THIS WORKS:
- * ============================================================
- * 1. Uses FusedLocationProviderClient to get high-accuracy GPS location
- * 2. Displays Latitude, Longitude, and Altitude
- * 3. Uses Geocoder to convert coordinates to a human-readable address
- * 4. Handles location permissions properly
- *
- * ============================================================
- * WHY WE NEED PERMISSIONS:
- * ============================================================
- * - Android requires runtime permission for location access
- * - Users must grant permission before the app can access GPS
- * - We handle this with ActivityResultContracts for modern Android
- *
- * ============================================================
- * WHAT IS REVERSE GEOCODING?
- * ============================================================
- * - Converting latitude/longitude coordinates to a human-readable address
- * - Example: (43.7740, -79.3450) → "Toronto, ON"
- * - The Geocoder class handles this for us
- *
- * This is the SAME technique used in the LocationFinder tutorial!
- *
- * @author Sheikh Naim
- * @since 1.0
+ * HOW IT WORKS (GPS & Geodesy):
+ * 1. Uses Google Play Services FusedLocationProviderClient with PRIORITY_HIGH_ACCURACY.
+ * 2. Fetches exact Geodetic Coordinates (Latitude, Longitude) in both:
+ *    - Standard Decimal Degrees (e.g. 40.7128° N, 74.0060° W)
+ *    - Degrees, Minutes, Seconds (DMS) (e.g. 40° 42' 46" N, 74° 0' 21" W)
+ * 3. Measures horizontal GPS fix precision (Accuracy in meters).
+ * 4. Performs asynchronous Reverse Geocoding using Android's Geocoder API to resolve
+ *    street address, postal code, administrative area, and country.
+ * 5. Embeds a live interactive OpenStreetMap view that centers on the user's position
+ *    and provides quick-share & clipboard copying actions.
  */
 class LocationActivity : AppCompatActivity() {
 
-    // ============================================================
-    // GPS LOCATION CLIENT - Gets location from GPS
-    // ============================================================
     private lateinit var fusedLocationClient: FusedLocationProviderClient
 
-    // ============================================================
-    // UI VIEWS - References to the layout elements
-    // ============================================================
-    private lateinit var latitudeText: TextView      // Shows latitude value
-    private lateinit var longitudeText: TextView     // Shows longitude value
-    private lateinit var altitudeText: TextView      // Shows altitude value
-    private lateinit var addressText: TextView       // Shows address from reverse geocoding
-    private lateinit var statusText: TextView        // Shows status messages
-    private lateinit var getLocationButton: Button   // Button to trigger location fetch
+    // UI VIEWS
+    private lateinit var latitudeText: TextView
+    private lateinit var longitudeText: TextView
+    private lateinit var altitudeText: TextView
+    private lateinit var addressText: TextView
+    private lateinit var statusText: TextView
+    private lateinit var dmsText: TextView
+    private lateinit var accuracyText: TextView
+    private lateinit var mapView: MapView
 
-    // ============================================================
-    // PERMISSION HANDLING - Requests location permission from user
-    // ============================================================
+    private lateinit var getLocationButton: Button
+    private lateinit var viewMapButton: Button
+    private lateinit var btnShareLocation: Button
+    private lateinit var btnCopyCoords: Button
+    private lateinit var btnNavigate: Button
+
+    private var locationMarker: Marker? = null
+    private var currentLatitude: Double? = null
+    private var currentLongitude: Double? = null
+    private var currentAddress: String? = null
+
     private val locationPermissionLauncher =
         registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { permissions ->
-            // Check if the user granted fine location permission
             val fineLocationGranted = permissions[Manifest.permission.ACCESS_FINE_LOCATION] == true
-
             if (fineLocationGranted) {
-                // Permission granted - get location
                 getCurrentLocation()
             } else {
-                // Permission denied - show message using string resource
                 statusText.text = getString(R.string.permission_denied)
-                Toast.makeText(
-                    this,
-                    getString(R.string.permission_denied_toast),
-                    Toast.LENGTH_LONG
-                ).show()
+                Toast.makeText(this, getString(R.string.permission_denied_toast), Toast.LENGTH_LONG).show()
             }
         }
 
-    // ============================================================
-    // LIFECYCLE METHODS - When the activity starts/stops
-    // ============================================================
-
-    /**
-     * onCreate - Called when the activity is first created
-     *
-     * This sets up:
-     * - The layout (UI)
-     * - The toolbar (top bar with back button)
-     * - All UI views
-     * - The FusedLocationProviderClient for GPS
-     * - The Get Location button click listener
-     *
-     * @param savedInstanceState Previously saved state (if any)
-     */
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        Configuration.getInstance().load(this, getSharedPreferences("osmdroid", MODE_PRIVATE))
+        Configuration.getInstance().userAgentValue = packageName
+
         setContentView(R.layout.activity_location)
 
         setupToolbar()
         initializeViews()
+        setupMap()
         initializeLocationClient()
         setupClickListeners()
         setInitialStatus()
+
+        // Auto-fetch if permission already granted
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+            getCurrentLocation()
+        }
     }
 
-    // ============================================================
-    // INITIALIZATION METHODS
-    // ============================================================
-
-    /**
-     * Sets up the toolbar with title and back navigation.
-     */
     private fun setupToolbar() {
         val toolbar = findViewById<Toolbar>(R.id.toolbar)
         setSupportActionBar(toolbar)
-        supportActionBar?.setDisplayHomeAsUpEnabled(true)  // Show back button
+        supportActionBar?.setDisplayHomeAsUpEnabled(true)
         supportActionBar?.title = getString(R.string.gps_location_title)
+        toolbar.setNavigationOnClickListener {
+            finish()
+        }
     }
 
-    /**
-     * Finds and initializes all UI views from the layout.
-     */
     private fun initializeViews() {
         latitudeText = findViewById(R.id.latitudeText)
         longitudeText = findViewById(R.id.longitudeText)
         altitudeText = findViewById(R.id.altitudeText)
         addressText = findViewById(R.id.addressText)
         statusText = findViewById(R.id.statusText)
+        dmsText = findViewById(R.id.dmsText)
+        accuracyText = findViewById(R.id.accuracyText)
+        mapView = findViewById(R.id.mapView)
+
         getLocationButton = findViewById(R.id.getLocationButton)
+        viewMapButton = findViewById(R.id.viewMapButton)
+        btnShareLocation = findViewById(R.id.btnShareLocation)
+        btnCopyCoords = findViewById(R.id.btnCopyCoords)
+        btnNavigate = findViewById(R.id.btnNavigate)
     }
 
-    /**
-     * Initializes the FusedLocationProviderClient for GPS access.
-     */
+    private fun setupMap() {
+        mapView.setTileSource(TileSourceFactory.MAPNIK)
+        mapView.setMultiTouchControls(true)
+        mapView.controller.setZoom(16.5)
+    }
+
     private fun initializeLocationClient() {
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
     }
 
-    /**
-     * Sets up click listeners for buttons.
-     */
     private fun setupClickListeners() {
         getLocationButton.setOnClickListener {
             checkLocationPermission()
         }
+
+        viewMapButton.setOnClickListener {
+            val lat = currentLatitude
+            val lon = currentLongitude
+            val intent = Intent(this, MapActivity::class.java)
+            if (lat != null && lon != null) {
+                intent.putExtra(MapActivity.EXTRA_LATITUDE, lat)
+                intent.putExtra(MapActivity.EXTRA_LONGITUDE, lon)
+                intent.putExtra(MapActivity.EXTRA_TITLE, "📍 GPS Location")
+                intent.putExtra(MapActivity.EXTRA_SNIPPET, currentAddress ?: "Lat: $lat, Lon: $lon")
+            }
+            startActivity(intent)
+        }
+
+        btnShareLocation.setOnClickListener {
+            val lat = currentLatitude
+            val lon = currentLongitude
+            if (lat == null || lon == null) {
+                Toast.makeText(this, "Acquire GPS position first", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+            val url = "https://www.openstreetmap.org/?mlat=$lat&mlon=$lon#map=17/$lat/$lon"
+            val text = "📍 My GPS Location:\nAddress: ${currentAddress ?: addressText.text}\nCoordinates: $lat, $lon\nDMS: ${dmsText.text}\nAltitude: ${altitudeText.text}\n🗺️ OpenStreetMap: $url"
+            val sendIntent = Intent(Intent.ACTION_SEND).apply {
+                type = "text/plain"
+                putExtra(Intent.EXTRA_SUBJECT, "My GPS Location")
+                putExtra(Intent.EXTRA_TEXT, text)
+            }
+            startActivity(Intent.createChooser(sendIntent, "Share Location via"))
+        }
+
+        btnCopyCoords.setOnClickListener {
+            val lat = currentLatitude
+            val lon = currentLongitude
+            if (lat == null || lon == null) {
+                Toast.makeText(this, "Acquire GPS position first", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+            val coords = String.format(Locale.US, "%.6f, %.6f", lat, lon)
+            val clipboard = getSystemService(CLIPBOARD_SERVICE) as ClipboardManager
+            val clip = ClipData.newPlainText("GPS Coordinates", coords)
+            clipboard.setPrimaryClip(clip)
+            Toast.makeText(this, "📋 Coordinates copied: $coords", Toast.LENGTH_SHORT).show()
+        }
+
+        btnNavigate.setOnClickListener {
+            val lat = currentLatitude
+            val lon = currentLongitude
+            if (lat == null || lon == null) {
+                Toast.makeText(this, "Acquire GPS position first", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+            val intent = Intent(this, MapActivity::class.java).apply {
+                putExtra(MapActivity.EXTRA_LATITUDE, lat)
+                putExtra(MapActivity.EXTRA_LONGITUDE, lon)
+                putExtra(MapActivity.EXTRA_TITLE, "📍 GPS Location")
+                putExtra(MapActivity.EXTRA_SNIPPET, currentAddress ?: "Lat: $lat, Lon: $lon")
+            }
+            startActivity(intent)
+        }
+    }
+
+    private fun toDms(coordinate: Double, isLatitude: Boolean): String {
+        val absolute = Math.abs(coordinate)
+        val degrees = absolute.toInt()
+        val minutesNotTruncated = (absolute - degrees) * 60.0
+        val minutes = minutesNotTruncated.toInt()
+        val seconds = ((minutesNotTruncated - minutes) * 60.0).toInt()
+        val direction = if (isLatitude) {
+            if (coordinate >= 0) "N" else "S"
+        } else {
+            if (coordinate >= 0) "E" else "W"
+        }
+        return "$degrees° $minutes' $seconds\" $direction"
     }
 
     /**
@@ -265,15 +324,43 @@ class LocationActivity : AppCompatActivity() {
         val longitude = location.longitude
         val altitude = location.altitude
 
+        currentLatitude = latitude
+        currentLongitude = longitude
+
         // Format and display coordinates (6 decimal places for accuracy)
         latitudeText.text = String.format(Locale.US, "%.6f", latitude)
         longitudeText.text = String.format(Locale.US, "%.6f", longitude)
 
-        // Display altitude (handles negative values - below sea level)
+        // DMS formatting
+        dmsText.text = "${toDms(latitude, true)}, ${toDms(longitude, false)}"
+
+        // Accuracy badge
+        if (location.hasAccuracy()) {
+            accuracyText.text = String.format(Locale.US, "GPS: ±%.1fm", location.accuracy)
+        } else {
+            accuracyText.text = "GPS: Active"
+        }
+
+        // Display altitude
         altitudeText.text = String.format(Locale.US, "%.1f m", altitude)
 
         // Update status
         statusText.text = getString(R.string.location_found)
+
+        // Update map position and marker
+        val point = GeoPoint(latitude, longitude)
+        if (locationMarker == null) {
+            locationMarker = Marker(mapView).apply {
+                position = point
+                title = "My GPS Position"
+                setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
+            }
+            mapView.overlays.add(locationMarker)
+        } else {
+            locationMarker?.position = point
+        }
+        mapView.controller.animateTo(point)
+        mapView.invalidate()
 
         // Get the address from coordinates
         getAddress(latitude, longitude)
@@ -368,8 +455,9 @@ class LocationActivity : AppCompatActivity() {
                         runOnUiThread {
                             if (addresses.isNotEmpty()) {
                                 val address = addresses[0]
-                                addressText.text = address.getAddressLine(0)
-                                    ?: getString(R.string.location_no_address)
+                                val addrStr = address.getAddressLine(0) ?: getString(R.string.location_no_address)
+                                currentAddress = addrStr
+                                addressText.text = addrStr
                             } else {
                                 addressText.text = getString(R.string.location_no_address)
                             }
@@ -399,8 +487,9 @@ class LocationActivity : AppCompatActivity() {
                     runOnUiThread {
                         if (!addresses.isNullOrEmpty()) {
                             val address = addresses[0]
-                            addressText.text = address.getAddressLine(0)
-                                ?: getString(R.string.location_no_address)
+                            val addrStr = address.getAddressLine(0) ?: getString(R.string.location_no_address)
+                            currentAddress = addrStr
+                            addressText.text = addrStr
                         } else {
                             addressText.text = getString(R.string.location_no_address)
                         }
@@ -426,8 +515,18 @@ class LocationActivity : AppCompatActivity() {
      *
      * @return true if navigation was handled
      */
+    override fun onResume() {
+        super.onResume()
+        mapView.onResume()
+    }
+
+    override fun onPause() {
+        super.onPause()
+        mapView.onPause()
+    }
+
     override fun onSupportNavigateUp(): Boolean {
-        onBackPressedDispatcher.onBackPressed()
+        finish()
         return true
     }
 }

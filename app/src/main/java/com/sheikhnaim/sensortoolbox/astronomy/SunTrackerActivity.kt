@@ -72,7 +72,7 @@ class SunTrackerActivity : AppCompatActivity() {
     /** Displays the total day length */
     private lateinit var dayLengthText: TextView
 
-    /** Displays the current sun altitude and azimuth */
+    /** Displays current sun position */
     private lateinit var sunPositionText: TextView
 
     /** Button to manually refresh the data */
@@ -80,6 +80,12 @@ class SunTrackerActivity : AppCompatActivity() {
 
     /** Button to reset the display and refresh */
     private lateinit var resetButton: Button
+
+    /** Button to open MapActivity */
+    private lateinit var viewMapButton: Button
+    private var currentLatitude: Double? = null
+    private var currentLongitude: Double? = null
+    private var currentAzimuth: Double? = null
 
     // ========== Location Services ==========
 
@@ -132,13 +138,16 @@ class SunTrackerActivity : AppCompatActivity() {
     // ========== Initialization Methods ==========
 
     /**
-     * Sets up the toolbar with back navigation support
+     * Sets up the toolbar with back navigation and title
      */
     private fun setupToolbar() {
         val toolbar = findViewById<Toolbar>(R.id.toolbar)
         setSupportActionBar(toolbar)
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
         supportActionBar?.title = getString(R.string.sun_tracker_title)
+        toolbar.setNavigationOnClickListener {
+            finish()
+        }
     }
 
     /**
@@ -152,6 +161,7 @@ class SunTrackerActivity : AppCompatActivity() {
         sunPositionText = findViewById(R.id.sunPositionText)
         refreshButton = findViewById(R.id.refreshButton)
         resetButton = findViewById(R.id.resetButton)
+        viewMapButton = findViewById(R.id.viewMapButton)
     }
 
     /**
@@ -166,6 +176,35 @@ class SunTrackerActivity : AppCompatActivity() {
         resetButton.setOnClickListener {
             // Reset display to default state and refresh
             resetDisplay()
+        }
+
+        viewMapButton.setOnClickListener {
+            val intent = android.content.Intent(this, com.sheikhnaim.sensortoolbox.MapActivity::class.java)
+            if (currentLatitude != null && currentLongitude != null) {
+                val lat = currentLatitude!!
+                val lon = currentLongitude!!
+                intent.putExtra(com.sheikhnaim.sensortoolbox.MapActivity.EXTRA_LATITUDE, lat)
+                intent.putExtra(com.sheikhnaim.sensortoolbox.MapActivity.EXTRA_LONGITUDE, lon)
+                intent.putExtra(com.sheikhnaim.sensortoolbox.MapActivity.EXTRA_TITLE, "☀️ Solar Ephemeris & Sun Path")
+                intent.putExtra(com.sheikhnaim.sensortoolbox.MapActivity.EXTRA_SNIPPET, "Sunrise: ${sunriseText.text} | Sunset: ${sunsetText.text} | ${sunPositionText.text}")
+                currentAzimuth?.let { az ->
+                    intent.putExtra(com.sheikhnaim.sensortoolbox.MapActivity.EXTRA_SUN_AZIMUTH, az)
+                }
+
+                // Calculate approximate sunrise/sunset azimuths for solar map rays
+                val dayOfYear = Calendar.getInstance().get(Calendar.DAY_OF_YEAR)
+                val declination = 23.45 * kotlin.math.sin(Math.toRadians(360.0 / 365.0 * (dayOfYear - 81)))
+                val latRad = Math.toRadians(lat)
+                val decRad = Math.toRadians(declination)
+                val cosAzRise = kotlin.math.sin(decRad) / kotlin.math.cos(latRad)
+                val clampedCos = cosAzRise.coerceIn(-1.0, 1.0)
+                val sunriseAz = Math.toDegrees(kotlin.math.acos(clampedCos))
+                val sunsetAz = 360.0 - sunriseAz
+
+                intent.putExtra(com.sheikhnaim.sensortoolbox.MapActivity.EXTRA_SUNRISE_AZIMUTH, sunriseAz)
+                intent.putExtra(com.sheikhnaim.sensortoolbox.MapActivity.EXTRA_SUNSET_AZIMUTH, sunsetAz)
+            }
+            startActivity(intent)
         }
     }
 
@@ -271,6 +310,9 @@ class SunTrackerActivity : AppCompatActivity() {
         val lat = location.latitude
         val lon = location.longitude
 
+        currentLatitude = lat
+        currentLongitude = lon
+
         // Display location coordinates with 4 decimal places
         locationText.text = String.format(Locale.US, "📍 %.4f, %.4f", lat, lon)
 
@@ -318,6 +360,7 @@ class SunTrackerActivity : AppCompatActivity() {
      * @param azimuth The sun's azimuth in degrees (measured from North clockwise)
      */
     private fun updatePositionDisplay(altitude: Double, azimuth: Double) {
+        currentAzimuth = azimuth
         val direction = getCardinalDirection(azimuth)
         sunPositionText.text = String.format(
             Locale.US,

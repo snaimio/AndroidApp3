@@ -126,6 +126,9 @@ class BubbleLevelActivity : AppCompatActivity(), SensorEventListener {
         setSupportActionBar(toolbar)
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
         supportActionBar?.title = getString(R.string.bubble_level_title)
+        toolbar.setNavigationOnClickListener {
+            finish()
+        }
     }
 
     /**

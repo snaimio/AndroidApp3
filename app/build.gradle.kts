@@ -56,4 +56,11 @@ dependencies {
 
     // RecyclerView - For efficient dashboard
     implementation(libs.androidx.recyclerview)
+
+    // For Map (osmdroid)
+    implementation("org.osmdroid:osmdroid-android:6.1.20")
+
+    // Material dependency
+    implementation("com.google.android.material:material:1.12.0")
+
 }

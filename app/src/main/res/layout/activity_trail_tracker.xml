@@ -14,13 +14,10 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:fitsSystemWindows="true"
-    android:paddingTop="?attr/actionBarSize"
-    android:paddingStart="16dp"
-    android:paddingEnd="16dp"
-    android:paddingBottom="16dp"
     android:background="#1A1A2E"
     tools:context=".location.TrailTrackerActivity">
 
@@ -30,7 +27,9 @@
         android:layout_width="0dp"
         android:layout_height="?attr/actionBarSize"
         android:background="?attr/colorPrimary"
-        android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
+        android:theme="@style/SensorToolBox.Toolbar"
+        app:theme="@style/SensorToolBox.Toolbar"
+        app:popupTheme="@style/SensorToolBox.PopupMenu"
         app:title="Trail Tracker"
         app:titleTextColor="#FFFFFF"
         app:navigationIcon="?attr/homeAsUpIndicator"
@@ -38,211 +37,277 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
-    <!-- TITLE -->
-    <TextView
-        android:id="@+id/titleText"
-        android:layout_width="wrap_content"
+    <!-- STATS CARD -->
+    <androidx.cardview.widget.CardView
+        android:id="@+id/statsCard"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:text="🥾 Trail Tracker"
-        android:textSize="24sp"
-        android:textStyle="bold"
-        android:textColor="#FFFFFF"
-        android:layout_marginTop="8dp"
+        android:layout_marginStart="12dp"
+        android:layout_marginEnd="12dp"
+        android:layout_marginTop="10dp"
+        app:cardCornerRadius="16dp"
+        app:cardElevation="6dp"
+        app:cardBackgroundColor="#22223B"
         app:layout_constraintTop_toBottomOf="@id/toolbar"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
-
-    <!-- ============================================================
-         CUSTOM TRAIL VIEW - This is where the trail is drawn!
-         ============================================================ -->
-    <!-- ✅ FIXED: Using custom TrailView instead of regular View -->
-    <com.sheikhnaim.sensortoolbox.location.TrailView
-        android:id="@+id/trailView"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:layout_marginTop="12dp"
-        android:layout_marginBottom="12dp"
-        android:background="#2A2A4E"
-        android:elevation="4dp"
-        android:outlineProvider="background"
-        app:layout_constraintTop_toBottomOf="@id/titleText"
-        app:layout_constraintBottom_toTopOf="@id/statsContainer"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
-
-    <!-- STATS CONTAINER -->
-    <LinearLayout
-        android:id="@+id/statsContainer"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:gravity="center"
-        android:background="#2A2A4E"
-        android:padding="12dp"
-        app:layout_constraintBottom_toTopOf="@id/buttonContainer"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
 
-        <!-- Distance -->
         <LinearLayout
-            android:layout_width="0dp"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:orientation="vertical"
+            android:orientation="horizontal"
+            android:padding="14dp"
             android:gravity="center">
 
-            <TextView
-                android:layout_width="wrap_content"
+            <!-- Distance -->
+            <LinearLayout
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:text="Distance"
-                android:textSize="11sp"
-                android:textColor="#888888" />
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:gravity="center">
 
-            <TextView
-                android:id="@+id/distanceText"
-                android:layout_width="wrap_content"
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="DISTANCE"
+                    android:textColor="#888888"
+                    android:textSize="10sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/distanceText"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="0.00 km"
+                    android:textColor="#4CAF50"
+                    android:textSize="18sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
+
+            <View
+                android:layout_width="1dp"
+                android:layout_height="36dp"
+                android:background="#333333" />
+
+            <!-- Duration -->
+            <LinearLayout
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:text="0.00 km"
-                android:textSize="18sp"
-                android:textStyle="bold"
-                android:textColor="#FFFFFF" />
+                android:layout_weight="1.1"
+                android:orientation="vertical"
+                android:gravity="center">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="DURATION"
+                    android:textColor="#888888"
+                    android:textSize="10sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/timeText"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="00:00:00"
+                    android:textColor="#FF9800"
+                    android:textSize="18sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
+
+            <View
+                android:layout_width="1dp"
+                android:layout_height="36dp"
+                android:background="#333333" />
+
+            <!-- Elevation Gain -->
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:gravity="center">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="ELEV GAIN"
+                    android:textColor="#888888"
+                    android:textSize="10sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/elevationText"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="0 m"
+                    android:textColor="#2196F3"
+                    android:textSize="18sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
 
         </LinearLayout>
+    </androidx.cardview.widget.CardView>
 
-        <!-- Time -->
-        <LinearLayout
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:orientation="vertical"
-            android:gravity="center">
+    <!-- MAP VIEW CONTAINER -->
+    <androidx.cardview.widget.CardView
+        android:id="@+id/mapContainer"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_marginStart="12dp"
+        android:layout_marginEnd="12dp"
+        android:layout_marginTop="10dp"
+        android:layout_marginBottom="12dp"
+        app:cardCornerRadius="16dp"
+        app:cardElevation="6dp"
+        app:cardBackgroundColor="#22223B"
+        app:layout_constraintTop_toBottomOf="@id/statsCard"
+        app:layout_constraintBottom_toTopOf="@id/buttonsLayout"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
 
-            <TextView
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <!-- OpenStreetMap View -->
+            <org.osmdroid.views.MapView
+                android:id="@+id/mapView"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent" />
+
+            <!-- Live Status & Points Badge -->
+            <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Time"
-                android:textSize="11sp"
-                android:textColor="#888888" />
+                android:layout_gravity="top|start"
+                android:layout_margin="10dp"
+                android:orientation="vertical">
 
-            <TextView
-                android:id="@+id/timeText"
+                <TextView
+                    android:id="@+id/gpsStatusBadge"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:background="#D91A1A2E"
+                    android:paddingHorizontal="10dp"
+                    android:paddingVertical="4dp"
+                    android:text="🟢 GPS Ready"
+                    android:textColor="#4CAF50"
+                    android:textSize="11sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/pointsCountText"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:background="#D91A1A2E"
+                    android:paddingHorizontal="10dp"
+                    android:paddingVertical="3dp"
+                    android:text="📍 0 points"
+                    android:textColor="#BBBBBB"
+                    android:textSize="10sp" />
+
+            </LinearLayout>
+
+            <!-- Map Floating Controls Column -->
+            <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="00:00:00"
-                android:textSize="18sp"
-                android:textStyle="bold"
-                android:textColor="#FFFFFF" />
+                android:layout_gravity="bottom|end"
+                android:orientation="vertical"
+                android:layout_margin="12dp">
 
-        </LinearLayout>
+                <com.google.android.material.floatingactionbutton.FloatingActionButton
+                    android:id="@+id/fabLayer"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="8dp"
+                    android:src="@android:drawable/ic_menu_agenda"
+                    android:contentDescription="Switch Map Layer"
+                    app:fabSize="mini"
+                    app:backgroundTint="#2A2A4E"
+                    app:tint="#FFFFFF" />
 
-        <!-- Elevation -->
-        <LinearLayout
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:orientation="vertical"
-            android:gravity="center">
+                <com.google.android.material.floatingactionbutton.FloatingActionButton
+                    android:id="@+id/fabMyLocation"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:src="@android:drawable/ic_menu_mylocation"
+                    android:contentDescription="My Location"
+                    app:fabSize="mini"
+                    app:backgroundTint="@color/colorPrimary"
+                    app:tint="#FFFFFF" />
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Elevation"
-                android:textSize="11sp"
-                android:textColor="#888888" />
+            </LinearLayout>
 
-            <TextView
-                android:id="@+id/elevationText"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="0 m"
-                android:textSize="18sp"
-                android:textStyle="bold"
-                android:textColor="#FFFFFF" />
+        </FrameLayout>
+    </androidx.cardview.widget.CardView>
 
-        </LinearLayout>
-
-    </LinearLayout>
-
-    <!-- POINTS COUNT - Shows how many GPS points recorded -->
-    <TextView
-        android:id="@+id/pointsCountText"
+    <!-- CONTROLS ROW -->
+    <LinearLayout
+        android:id="@+id/buttonsLayout"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:text="📍 0 points"
-        android:textSize="12sp"
-        android:textColor="#666666"
-        android:gravity="center"
-        android:padding="4dp"
-        android:background="#1A1A2E"
-        app:layout_constraintTop_toBottomOf="@id/statsContainer"
-        app:layout_constraintBottom_toTopOf="@id/buttonContainer"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
-
-    <!-- BUTTONS -->
-    <LinearLayout
-        android:id="@+id/buttonContainer"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:layout_marginTop="12dp"
-        android:layout_marginBottom="16dp"
         android:gravity="center"
+        android:layout_marginStart="12dp"
+        android:layout_marginEnd="12dp"
+        android:layout_marginBottom="16dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
 
-        <!-- START - GREEN -->
         <com.google.android.material.button.MaterialButton
             android:id="@+id/startButton"
-            android:layout_width="wrap_content"
-            android:layout_height="48dp"
-            android:minWidth="90dp"
+            android:layout_width="0dp"
+            android:layout_height="46dp"
+            android:layout_weight="1"
+            android:layout_marginEnd="4dp"
             android:text="▶️ Start"
-            android:textSize="14sp"
+            android:textSize="13sp"
             android:textColor="#FFFFFF"
-            android:singleLine="true"
-            android:gravity="center"
-            android:layout_marginEnd="6dp"
-            app:cornerRadius="10dp"
-            app:backgroundTint="#4CAF50"
-            android:paddingStart="16dp"
-            android:paddingEnd="16dp" />
+            app:cornerRadius="8dp"
+            app:backgroundTint="#4CAF50" />
 
-        <!-- STOP - RED -->
         <com.google.android.material.button.MaterialButton
             android:id="@+id/stopButton"
-            android:layout_width="wrap_content"
-            android:layout_height="48dp"
-            android:minWidth="90dp"
+            android:layout_width="0dp"
+            android:layout_height="46dp"
+            android:layout_weight="1"
+            android:layout_marginHorizontal="4dp"
             android:text="⏹️ Stop"
-            android:textSize="14sp"
+            android:textSize="13sp"
             android:textColor="#FFFFFF"
-            android:singleLine="true"
-            android:gravity="center"
-            android:enabled="false"
-            android:layout_marginEnd="6dp"
-            app:cornerRadius="10dp"
+            app:cornerRadius="8dp"
             app:backgroundTint="#F44336"
-            android:paddingStart="16dp"
-            android:paddingEnd="16dp" />
+            android:enabled="false" />
 
-        <!-- RESET - ORANGE -->
         <com.google.android.material.button.MaterialButton
             android:id="@+id/resetButton"
-            android:layout_width="wrap_content"
-            android:layout_height="48dp"
-            android:minWidth="90dp"
+            android:layout_width="0dp"
+            android:layout_height="46dp"
+            android:layout_weight="1"
+            android:layout_marginHorizontal="4dp"
             android:text="🔄 Reset"
-            android:textSize="14sp"
+            android:textSize="13sp"
             android:textColor="#FFFFFF"
-            android:singleLine="true"
-            android:gravity="center"
-            android:enabled="false"
-            app:cornerRadius="10dp"
+            app:cornerRadius="8dp"
             app:backgroundTint="#FF9800"
-            android:paddingStart="16dp"
-            android:paddingEnd="16dp" />
+            android:enabled="false" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/shareTrailButton"
+            android:layout_width="0dp"
+            android:layout_height="46dp"
+            android:layout_weight="1"
+            android:layout_marginStart="4dp"
+            android:text="📤 Share"
+            android:textSize="13sp"
+            android:textColor="#FFFFFF"
+            app:cornerRadius="8dp"
+            app:backgroundTint="#3F51B5" />
 
     </LinearLayout>
 

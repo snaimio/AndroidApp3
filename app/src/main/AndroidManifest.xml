@@ -12,9 +12,12 @@
     4. Launcher - Which activity opens first
 
     ============================================================
-    FIXED: SplashScreen removed to fix crash
-    DashboardActivity is now the LAUNCHER
+    ASSIGNMENT 6 UPDATES:
     ============================================================
+    1. Added INTERNET permission (for map tiles) ✅
+    2. Added ACCESS_NETWORK_STATE permission ✅
+    3. Added LiveLocationActivity ✅
+    4. Added MapActivity ✅
 -->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
@@ -34,6 +37,20 @@
          Less accurate but uses less battery
     -->
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+
+    <!-- ============================================================
+         ASSIGNMENT 6: NEW PERMISSIONS FOR MAPS
+         ============================================================ -->
+
+    <!-- INTERNET - Required to load OpenStreetMap tiles
+         Without this, the map will be blank!
+    -->
+    <uses-permission android:name="android.permission.INTERNET" />
+
+    <!-- ACCESS_NETWORK_STATE - Check if internet is available
+         Helps the app handle offline/online states
+    -->
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
     <!-- ============================================================
          SENSOR DECLARATIONS - What sensors the app uses
@@ -67,15 +84,10 @@
         android:theme="@style/Theme.SensorToolBox">
 
         <!-- ============================================================
-             DASHBOARD ACTIVITY - Main screen (NOW THE LAUNCHER!)
+             DASHBOARD ACTIVITY - Main screen (LAUNCHER!)
              ============================================================
              This is the first screen users see when they open the app.
              It shows all tools in a grid layout.
-
-             WHY THIS CHANGE:
-             - SplashScreen was causing crashes
-             - DashboardActivity works perfectly
-             - Users see the app content immediately
         -->
         <activity
             android:name=".DashboardActivity"
@@ -92,11 +104,6 @@
              ============================================================
              The SplashScreen is currently commented out because it was
              causing the app to crash. We'll fix it later.
-
-             TO RE-ENABLE:
-             1. Uncomment this block
-             2. Remove the intent-filter from DashboardActivity
-             3. Fix splash_screen.xml drawable
         -->
         <!--
         <activity
@@ -112,147 +119,119 @@
         -->
 
         <!-- ============================================================
-             LOCATION & NAVIGATION TOOLS
+             ASSIGNMENT 5 ACTIVITIES (Already Exist)
              ============================================================ -->
 
-        <!-- Digital Compass - Shows heading and direction
-             Uses: Accelerometer + Magnetometer (Sensor Fusion)
-        -->
+        <!-- Location & Navigation Tools -->
         <activity
             android:name=".navigation.CompassActivity"
             android:exported="false"
             android:parentActivityName=".DashboardActivity"
             android:windowSoftInputMode="adjustResize" />
 
-        <!-- GPS Location - Shows coordinates, altitude, and address
-             Uses: GPS
-        -->
         <activity
             android:name=".location.LocationActivity"
             android:exported="false"
             android:parentActivityName=".DashboardActivity"
             android:windowSoftInputMode="adjustResize" />
 
-        <!-- Trail Tracker - Records hiking trails
-             Uses: GPS
-        -->
         <activity
             android:name=".location.TrailTrackerActivity"
             android:exported="false"
             android:parentActivityName=".DashboardActivity"
             android:windowSoftInputMode="adjustResize" />
 
-        <!-- ============================================================
-             SPEED & DISTANCE TOOLS
-             ============================================================ -->
-
-        <!-- Speedometer - Shows current, max, and average speed
-             Uses: GPS
-        -->
+        <!-- Speed & Distance Tools -->
         <activity
             android:name=".speed.SpeedometerActivity"
             android:exported="false"
             android:parentActivityName=".DashboardActivity"
             android:windowSoftInputMode="adjustResize" />
 
-        <!-- Distance Tracker - Tracks distance traveled
-             Uses: GPS
-        -->
         <activity
             android:name=".speed.DistanceTrackerActivity"
             android:exported="false"
             android:parentActivityName=".DashboardActivity"
             android:windowSoftInputMode="adjustResize" />
 
-        <!-- Altimeter - Shows altitude and elevation gain
-             Uses: GPS
-        -->
         <activity
             android:name=".speed.AltimeterActivity"
             android:exported="false"
             android:parentActivityName=".DashboardActivity"
             android:windowSoftInputMode="adjustResize" />
 
-        <!-- ============================================================
-             MOTION & SENSORS TOOLS
-             ============================================================ -->
-
-        <!-- Gravity Meter - Measures gravitational force
-             Uses: Accelerometer
-        -->
+        <!-- Motion & Sensors Tools -->
         <activity
             android:name=".motion.GravityMeterActivity"
             android:exported="false"
             android:parentActivityName=".DashboardActivity"
             android:windowSoftInputMode="adjustResize" />
 
-        <!-- Bubble Level - Shows pitch and roll angles
-             Uses: Accelerometer
-        -->
         <activity
             android:name=".motion.BubbleLevelActivity"
             android:exported="false"
             android:parentActivityName=".DashboardActivity"
             android:windowSoftInputMode="adjustResize" />
 
-        <!-- Shake Detector - Counts shakes and shows intensity
-             Uses: Accelerometer
-        -->
         <activity
             android:name=".motion.ShakeDetectorActivity"
             android:exported="false"
             android:parentActivityName=".DashboardActivity"
             android:windowSoftInputMode="adjustResize" />
 
-        <!-- Space Ball - Physics game controlled by tilting
-             Uses: Accelerometer
-        -->
         <activity
             android:name=".motion.SpaceBallActivity"
             android:exported="false"
             android:parentActivityName=".DashboardActivity"
             android:windowSoftInputMode="adjustResize" />
 
-        <!-- ============================================================
-             DETECTION TOOLS
-             ============================================================ -->
-
-        <!-- Metal Detector - Detects metals by measuring magnetic field
-             Uses: Magnetometer
-        -->
+        <!-- Detection Tools -->
         <activity
             android:name=".detection.MetalDetectorActivity"
             android:exported="false"
             android:parentActivityName=".DashboardActivity"
             android:windowSoftInputMode="adjustResize" />
 
-        <!-- EMF Meter - Measures electromagnetic field strength
-             Uses: Magnetometer
-        -->
         <activity
             android:name=".detection.EMFMeterActivity"
             android:exported="false"
             android:parentActivityName=".DashboardActivity"
             android:windowSoftInputMode="adjustResize" />
 
-        <!-- ============================================================
-             ASTRONOMY TOOLS
-             ============================================================ -->
-
-        <!-- Moon Phase - Shows current moon phase with emoji and illumination
-             Uses: GPS + Math
-        -->
+        <!-- Astronomy Tools -->
         <activity
             android:name=".astronomy.MoonPhaseActivity"
             android:exported="false"
             android:parentActivityName=".DashboardActivity"
             android:windowSoftInputMode="adjustResize" />
 
-        <!-- Sun Tracker - Shows sunrise, sunset, and sun position
-             Uses: GPS + Math
-        -->
         <activity
             android:name=".astronomy.SunTrackerActivity"
+            android:exported="false"
+            android:parentActivityName=".DashboardActivity"
+            android:windowSoftInputMode="adjustResize" />
+
+        <!-- ============================================================
+             ASSIGNMENT 6: NEW ACTIVITIES
+             ============================================================ -->
+
+        <!-- Live Location Activity - Continuous GPS updates -->
+        <activity
+            android:name=".LiveLocationActivity"
+            android:exported="false"
+            android:parentActivityName=".DashboardActivity"
+            android:windowSoftInputMode="adjustResize" />
+
+        <!-- Map Activity - OpenStreetMap display -->
+        <activity
+            android:name=".MapActivity"
+            android:exported="false"
+            android:parentActivityName=".DashboardActivity"
+            android:windowSoftInputMode="adjustResize" />
+
+        <!-- Fitness Tracker Activity - Combines Map + Speed + Distance + Time -->
+        <activity
+            android:name=".FitnessTrackerActivity"
             android:exported="false"
             android:parentActivityName=".DashboardActivity"
             android:windowSoftInputMode="adjustResize" />

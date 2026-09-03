@@ -54,7 +54,11 @@ class MoonPhaseActivity : AppCompatActivity() {
     private lateinit var illuminationText: TextView    // Shows illumination percentage
     private lateinit var nextFullMoonText: TextView    // Shows next full moon date
     private lateinit var refreshButton: Button         // Refresh button
+    private lateinit var viewMapButton: Button        // View on map button
     private lateinit var dateText: TextView            // Shows current date
+
+    private var currentLatitude: Double? = null
+    private var currentLongitude: Double? = null
 
     // ============================================================
     // PERMISSION HANDLING - Requests location permission from user
@@ -85,6 +89,9 @@ class MoonPhaseActivity : AppCompatActivity() {
         setSupportActionBar(toolbar)
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
         supportActionBar?.title = getString(R.string.moon_phase_title)
+        toolbar.setNavigationOnClickListener {
+            finish()
+        }
 
         // ============================================================
         // STEP 2: Find all UI views
@@ -95,6 +102,7 @@ class MoonPhaseActivity : AppCompatActivity() {
         illuminationText = findViewById(R.id.illuminationText)
         nextFullMoonText = findViewById(R.id.nextFullMoonText)
         refreshButton = findViewById(R.id.refreshButton)
+        viewMapButton = findViewById(R.id.viewMapButton)
         dateText = findViewById(R.id.dateText)
 
         // ============================================================
@@ -103,10 +111,21 @@ class MoonPhaseActivity : AppCompatActivity() {
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
 
         // ============================================================
-        // STEP 4: Set up the Refresh button
+        // STEP 4: Set up the Buttons
         // ============================================================
         refreshButton.setOnClickListener {
             checkPermissionAndUpdate()
+        }
+
+        viewMapButton.setOnClickListener {
+            val intent = android.content.Intent(this, com.sheikhnaim.sensortoolbox.MapActivity::class.java)
+            if (currentLatitude != null && currentLongitude != null) {
+                intent.putExtra(com.sheikhnaim.sensortoolbox.MapActivity.EXTRA_LATITUDE, currentLatitude!!)
+                intent.putExtra(com.sheikhnaim.sensortoolbox.MapActivity.EXTRA_LONGITUDE, currentLongitude!!)
+                intent.putExtra(com.sheikhnaim.sensortoolbox.MapActivity.EXTRA_TITLE, "🌙 Moon Phase: ${moonPhaseNameText.text}")
+                intent.putExtra(com.sheikhnaim.sensortoolbox.MapActivity.EXTRA_SNIPPET, "${illuminationText.text} | ${nextFullMoonText.text}")
+            }
+            startActivity(intent)
         }
 
         // ============================================================
@@ -155,6 +174,8 @@ class MoonPhaseActivity : AppCompatActivity() {
         )
             .addOnSuccessListener { location: Location? ->
                 if (location != null) {
+                    currentLatitude = location.latitude
+                    currentLongitude = location.longitude
                     updateMoonPhase(location)
                 } else {
                     locationText.text = getString(R.string.location_unavailable_short)

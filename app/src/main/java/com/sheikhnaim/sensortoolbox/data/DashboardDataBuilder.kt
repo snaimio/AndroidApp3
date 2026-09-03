@@ -1,11 +1,14 @@
 package com.sheikhnaim.sensortoolbox.data
 
+import com.sheikhnaim.sensortoolbox.LiveLocationActivity
+import com.sheikhnaim.sensortoolbox.MapActivity
 import com.sheikhnaim.sensortoolbox.R
 import com.sheikhnaim.sensortoolbox.astronomy.MoonPhaseActivity
 import com.sheikhnaim.sensortoolbox.astronomy.SunTrackerActivity
 import com.sheikhnaim.sensortoolbox.detection.EMFMeterActivity
 import com.sheikhnaim.sensortoolbox.detection.MetalDetectorActivity
 import com.sheikhnaim.sensortoolbox.location.LocationActivity
+import com.sheikhnaim.sensortoolbox.location.TrailTrackerActivity
 import com.sheikhnaim.sensortoolbox.motion.BubbleLevelActivity
 import com.sheikhnaim.sensortoolbox.motion.GravityMeterActivity
 import com.sheikhnaim.sensortoolbox.motion.ShakeDetectorActivity
@@ -39,17 +42,31 @@ object DashboardDataBuilder {
             ToolItem.createCategory(R.string.category_location),
 
             ToolItem.createTool(
+                iconRes = R.string.icon_map,
+                titleRes = R.string.tool_map,
+                descRes = R.string.desc_map,
+                activityClass = MapActivity::class.java
+            ),
+
+            ToolItem.createTool(
+                iconRes = R.string.icon_live_location,
+                titleRes = R.string.tool_live_location,
+                descRes = R.string.desc_live_location,
+                activityClass = LiveLocationActivity::class.java
+            ),
+
+            ToolItem.createTool(
+                iconRes = R.string.icon_trail_tracker,
+                titleRes = R.string.tool_trail_tracker,
+                descRes = R.string.desc_trail_tracker,
+                activityClass = TrailTrackerActivity::class.java
+            ),
+
+            ToolItem.createTool(
                 iconRes = R.string.icon_compass,
                 titleRes = R.string.tool_compass,
                 descRes = R.string.desc_compass,
                 activityClass = CompassActivity::class.java
-            ),
-
-            ToolItem.createTool(
-                iconRes = R.string.icon_gps,
-                titleRes = R.string.tool_gps,
-                descRes = R.string.desc_gps,
-                activityClass = LocationActivity::class.java
             ),
 
             // ============================================================
@@ -76,6 +93,13 @@ object DashboardDataBuilder {
                 titleRes = R.string.tool_altimeter,
                 descRes = R.string.desc_altimeter,
                 activityClass = AltimeterActivity::class.java
+            ),
+
+            ToolItem.createTool(
+                iconRes = R.string.icon_fitness_tracker,
+                titleRes = R.string.tool_fitness_tracker,
+                descRes = R.string.desc_fitness_tracker,
+                activityClass = com.sheikhnaim.sensortoolbox.FitnessTrackerActivity::class.java
             ),
 
             // ============================================================

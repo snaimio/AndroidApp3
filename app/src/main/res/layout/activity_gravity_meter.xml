@@ -14,13 +14,10 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:fitsSystemWindows="true"
-    android:paddingTop="?attr/actionBarSize"
-    android:paddingStart="16dp"
-    android:paddingEnd="16dp"
-    android:paddingBottom="16dp"
     android:background="#1A1A2E"
     tools:context=".motion.GravityMeterActivity">
 
@@ -30,7 +27,9 @@
         android:layout_width="0dp"
         android:layout_height="?attr/actionBarSize"
         android:background="?attr/colorPrimary"
-        android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
+        android:theme="@style/SensorToolBox.Toolbar"
+        app:theme="@style/SensorToolBox.Toolbar"
+        app:popupTheme="@style/SensorToolBox.PopupMenu"
         app:title="Gravity Meter"
         app:titleTextColor="#FFFFFF"
         app:navigationIcon="?attr/homeAsUpIndicator"
@@ -38,57 +37,13 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
-    <!-- TITLE -->
-    <TextView
-        android:id="@+id/titleText"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="🌐 Gravity Meter"
-        android:textSize="24sp"
-        android:textStyle="bold"
-        android:textColor="#FFFFFF"
-        android:layout_marginTop="8dp"
-        app:layout_constraintTop_toBottomOf="@id/toolbar"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
-
-    <!-- TOTAL FORCE -->
-    <TextView
-        android:id="@+id/totalForceText"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="9.81 m/s²"
-        android:textSize="48sp"
-        android:textStyle="bold"
-        android:textColor="#4CAF50"
-        android:layout_marginTop="12dp"
-        app:layout_constraintTop_toBottomOf="@id/titleText"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
-
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Total Gravitational Force"
-        android:textSize="14sp"
-        android:textColor="#888888"
-        android:layout_marginTop="4dp"
-        app:layout_constraintTop_toBottomOf="@id/totalForceText"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
-
-    <!-- AXIS CARD -->
-    <androidx.cardview.widget.CardView
-        android:id="@+id/axisCard"
+    <!-- SCROLLABLE CENTERED CONTAINER -->
+    <ScrollView
         android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="12dp"
-        android:layout_marginStart="8dp"
-        android:layout_marginEnd="8dp"
-        app:cardCornerRadius="12dp"
-        app:cardElevation="4dp"
-        app:cardBackgroundColor="#2A2A4E"
-        app:layout_constraintTop_toBottomOf="@id/totalForceText"
+        android:layout_height="0dp"
+        android:fillViewport="true"
+        app:layout_constraintTop_toBottomOf="@id/toolbar"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
 
@@ -96,149 +51,205 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:padding="16dp">
+            android:gravity="center"
+            android:paddingStart="20dp"
+            android:paddingEnd="20dp"
+            android:paddingTop="16dp"
+            android:paddingBottom="24dp">
 
-            <LinearLayout
+            <!-- TITLE -->
+            <TextView
+                android:id="@+id/titleText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="🌐 Gravity Meter"
+                android:textSize="24sp"
+                android:textStyle="bold"
+                android:textColor="#FFFFFF" />
+
+            <!-- TOTAL FORCE CARD -->
+            <androidx.cardview.widget.CardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="center_vertical">
+                android:layout_marginTop="16dp"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="6dp"
+                app:cardBackgroundColor="#2A2A4E">
 
-                <TextView
-                    android:layout_width="wrap_content"
+                <LinearLayout
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="X-Axis:"
-                    android:textSize="16sp"
-                    android:textStyle="bold"
-                    android:textColor="#888888"
-                    android:layout_weight="1" />
+                    android:orientation="vertical"
+                    android:gravity="center"
+                    android:padding="20dp">
 
-                <TextView
-                    android:id="@+id/xAxisText"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="0.00 m/s²"
-                    android:textSize="18sp"
-                    android:textStyle="bold"
-                    android:textColor="#F44336" />
+                    <TextView
+                        android:id="@+id/totalForceText"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="9.81 m/s²"
+                        android:textSize="48sp"
+                        android:textStyle="bold"
+                        android:textColor="#4CAF50" />
 
-            </LinearLayout>
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Total Gravitational Acceleration (g)"
+                        android:textSize="13sp"
+                        android:textColor="#AAAAAA"
+                        android:layout_marginTop="4dp" />
 
-            <LinearLayout
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
+            <!-- AXIS CARD -->
+            <androidx.cardview.widget.CardView
+                android:id="@+id/axisCard"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="center_vertical"
-                android:layout_marginTop="8dp">
+                android:layout_marginTop="14dp"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="4dp"
+                app:cardBackgroundColor="#2A2A4E">
 
-                <TextView
-                    android:layout_width="wrap_content"
+                <LinearLayout
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Y-Axis:"
-                    android:textSize="16sp"
-                    android:textStyle="bold"
-                    android:textColor="#888888"
-                    android:layout_weight="1" />
+                    android:orientation="vertical"
+                    android:padding="18dp">
 
-                <TextView
-                    android:id="@+id/yAxisText"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="0.00 m/s²"
-                    android:textSize="18sp"
-                    android:textStyle="bold"
-                    android:textColor="#4CAF50" />
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical">
 
-            </LinearLayout>
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:text="X-Axis (Lateral)"
+                            android:textSize="15sp"
+                            android:textStyle="bold"
+                            android:textColor="#AAAAAA"
+                            android:layout_weight="1" />
 
-            <LinearLayout
-                android:layout_width="match_parent"
+                        <TextView
+                            android:id="@+id/xAxisText"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="0.00 m/s²"
+                            android:textSize="17sp"
+                            android:textStyle="bold"
+                            android:textColor="#F44336" />
+
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:layout_marginTop="12dp">
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:text="Y-Axis (Longitudinal)"
+                            android:textSize="15sp"
+                            android:textStyle="bold"
+                            android:textColor="#AAAAAA"
+                            android:layout_weight="1" />
+
+                        <TextView
+                            android:id="@+id/yAxisText"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="0.00 m/s²"
+                            android:textSize="17sp"
+                            android:textStyle="bold"
+                            android:textColor="#4CAF50" />
+
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:layout_marginTop="12dp">
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:text="Z-Axis (Vertical)"
+                            android:textSize="15sp"
+                            android:textStyle="bold"
+                            android:textColor="#AAAAAA"
+                            android:layout_weight="1" />
+
+                        <TextView
+                            android:id="@+id/zAxisText"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="0.00 m/s²"
+                            android:textSize="17sp"
+                            android:textStyle="bold"
+                            android:textColor="#2196F3" />
+
+                    </LinearLayout>
+
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
+            <!-- ORIENTATION & REFERENCE -->
+            <TextView
+                android:id="@+id/orientationText"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="center_vertical"
-                android:layout_marginTop="8dp">
+                android:text="📱 Face Up"
+                android:textSize="22sp"
+                android:textStyle="bold"
+                android:textColor="#FFFFFF"
+                android:layout_marginTop="16dp" />
 
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Z-Axis:"
-                    android:textSize="16sp"
-                    android:textStyle="bold"
-                    android:textColor="#888888"
-                    android:layout_weight="1" />
+            <TextView
+                android:id="@+id/referenceText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="🌍 Earth's Standard Gravity: 9.80665 m/s² (1.0g)"
+                android:textSize="13sp"
+                android:textColor="#888888"
+                android:layout_marginTop="4dp" />
 
-                <TextView
-                    android:id="@+id/zAxisText"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="0.00 m/s²"
-                    android:textSize="18sp"
-                    android:textStyle="bold"
-                    android:textColor="#2196F3" />
+            <!-- RESET - ORANGE -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/resetButton"
+                android:layout_width="wrap_content"
+                android:layout_height="48dp"
+                android:minWidth="160dp"
+                android:text="🔄 Calibrate / Zero Baseline"
+                android:textSize="14sp"
+                android:textColor="#FFFFFF"
+                android:singleLine="true"
+                android:gravity="center"
+                android:layout_marginTop="16dp"
+                app:cornerRadius="10dp"
+                app:backgroundTint="#FF9800"
+                android:paddingStart="20dp"
+                android:paddingEnd="20dp" />
 
-            </LinearLayout>
+            <!-- BASELINE -->
+            <TextView
+                android:id="@+id/baselineText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Baseline: --.-- m/s²"
+                android:textSize="13sp"
+                android:textColor="#888888"
+                android:layout_marginTop="6dp" />
 
         </LinearLayout>
-    </androidx.cardview.widget.CardView>
-
-    <!-- ORIENTATION -->
-    <TextView
-        android:id="@+id/orientationText"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="📱 Face Up"
-        android:textSize="24sp"
-        android:textStyle="bold"
-        android:textColor="#FFFFFF"
-        android:layout_marginTop="12dp"
-        app:layout_constraintTop_toBottomOf="@id/axisCard"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
-
-    <!-- REFERENCE -->
-    <TextView
-        android:id="@+id/referenceText"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="🌍 Earth's gravity: 9.81 m/s²"
-        android:textSize="14sp"
-        android:textColor="#888888"
-        android:layout_marginTop="4dp"
-        app:layout_constraintTop_toBottomOf="@id/orientationText"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
-
-    <!-- RESET - ORANGE -->
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/resetButton"
-        android:layout_width="wrap_content"
-        android:layout_height="48dp"
-        android:minWidth="100dp"
-        android:text="🔄 Reset Baseline"
-        android:textSize="16sp"
-        android:textColor="#FFFFFF"
-        android:singleLine="true"
-        android:gravity="center"
-        android:layout_marginTop="12dp"
-        app:cornerRadius="10dp"
-        app:backgroundTint="#FF9800"
-        android:paddingStart="20dp"
-        android:paddingEnd="20dp"
-        app:layout_constraintTop_toBottomOf="@id/referenceText"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
-
-    <!-- BASELINE -->
-    <TextView
-        android:id="@+id/baselineText"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Baseline: --.-- m/s²"
-        android:textSize="14sp"
-        android:textColor="#888888"
-        android:layout_marginTop="4dp"
-        app:layout_constraintTop_toBottomOf="@id/resetButton"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
+    </ScrollView>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

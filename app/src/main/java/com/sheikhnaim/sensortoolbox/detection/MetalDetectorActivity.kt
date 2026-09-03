@@ -1,12 +1,12 @@
 package com.sheikhnaim.sensortoolbox.detection
 
-// ============================================================
-// IMPORTS
-// ============================================================
+import android.Manifest
+import android.content.pm.PackageManager
 import android.hardware.Sensor
 import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
+import android.location.Location
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -14,117 +14,97 @@ import android.widget.Button
 import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
 import androidx.core.content.ContextCompat
+import com.google.android.gms.location.FusedLocationProviderClient
+import com.google.android.gms.location.LocationServices
+import com.google.android.gms.location.Priority
+import com.sheikhnaim.sensortoolbox.MapActivity
 import com.sheikhnaim.sensortoolbox.R
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 import kotlin.math.sqrt
 
 /**
- * MetalDetectorActivity - Detects metals using the magnetic field sensor
+ * MetalDetectorActivity - Detects ferromagnetic metals and magnetic anomalies
+ * using the hardware Magnetometer sensor and geotags detection locations on OpenStreetMap.
  *
- * ============================================================
- * HOW IT WORKS:
- * ============================================================
- * 1. Uses the Magnetometer (magnetic field sensor)
- * 2. Reads the X, Y, Z values of the magnetic field
- * 3. Calculates the total magnetic field strength using:
- *    total = sqrt(x² + y² + z²)
- * 4. Values are displayed in microtesla (µT)
- * 5. The higher the value, the more metal is nearby!
- *
- * ============================================================
- * SCIENCE BEHIND IT:
- * ============================================================
- * Earth's magnetic field is typically around 25-65 µT.
- * When you bring a ferromagnetic metal (iron, steel) near
- * the phone, it distorts the magnetic field, causing a
- * significant increase in the measured value.
- *
- * ============================================================
- * CALIBRATION:
- * ============================================================
- * Calibration removes the background magnetic field (Earth's
- * field + nearby electronics) so only the metal's effect is
- * measured. Press "Calibrate" away from metal objects.
- *
- * @author Sheikh Naim
- * @since 1.0
+ * HOW IT WORKS (Physics & Sensor Math):
+ * 1. Ferromagnetic metals (iron, steel, cobalt, nickel) distort and concentrate
+ *    local magnetic flux lines.
+ * 2. When a metal object approaches the phone's magnetometer chip, the total field strength:
+ *    B_total = sqrt(Bx² + By² + Bz²) spikes significantly above the natural ambient baseline (~45µT).
+ * 3. The app calibrates the ambient background baseline and converts the positive delta
+ *    into a relative percentage gauge (0% to 100%).
+ * 4. Found detection spots can be saved with GPS coordinates and viewed on OpenStreetMap.
  */
 class MetalDetectorActivity : AppCompatActivity(), SensorEventListener {
 
+    /**
+     * Data class to store a single geotagged metal detection spot.
+     */
+    data class DetectionSpot(
+        val lat: Double,
+        val lon: Double,
+        val strength: Float,
+        val timestamp: Long
+    )
+
     // ============================================================
-    // CONSTANTS
+    // CONSTANTS & CALIBRATION THRESHOLDS
     // ============================================================
     companion object {
-        /** Maximum expected magnetic field for progress bar (µT) */
+        /** Maximum expected magnetic field deviation for progress gauge (µT) */
         private const val MAX_EXPECTED_VALUE = 100.0
 
-        /** Threshold for strong signal (percentage) */
+        /** Signal percentage thresholds for classifying proximity */
         private const val THRESHOLD_STRONG = 80
-
-        /** Threshold for medium signal (percentage) */
         private const val THRESHOLD_MEDIUM = 50
-
-        /** Threshold for weak signal (percentage) */
         private const val THRESHOLD_WEAK = 20
 
-        /** Delay before calibration starts (milliseconds) */
+        /** Calibration delay (ms) to settle sensor readings */
         private const val CALIBRATION_DELAY_MS = 500L
     }
 
     // ============================================================
-    // SENSOR MANAGER
+    // SENSOR MANAGER & LOCATION
     // ============================================================
-    /** Manages sensor registration and updates */
     private lateinit var sensorManager: SensorManager
-
-    /** The magnetic field sensor (magnetometer) */
     private var magneticSensor: Sensor? = null
+    private lateinit var fusedLocationClient: FusedLocationProviderClient
+    private var lastLocation: Location? = null
+    private val detectionSpots = mutableListOf<DetectionSpot>()
+    private var currentStrength: Float = 0f
 
     // ============================================================
     // UI VIEWS
     // ============================================================
-    /** Displays the current magnetic field strength in µT */
     private lateinit var strengthText: TextView
-
-    /** Visual progress bar showing signal strength */
     private lateinit var strengthBar: ProgressBar
-
-    /** Shows the current detection status */
     private lateinit var statusText: TextView
-
-    /** Shows helpful hints to the user */
     private lateinit var hintText: TextView
-
-    /** Button to recalibrate the sensor */
     private lateinit var calibrateButton: Button
+    private lateinit var saveSpotButton: Button
+    private lateinit var viewMapButton: Button
 
     // ============================================================
     // DATA
     // ============================================================
-    /** Baseline magnetic field value (removes background) */
     private var baseline = 0.0f
-
-    /** True if calibration has been performed */
     private var isCalibrated = false
-
-    /** Handler for delayed calibration */
     private val handler = Handler(Looper.getMainLooper())
-
-    /** Runnable for calibration */
     private var calibrationRunnable: Runnable? = null
 
-    // ============================================================
-    // LIFECYCLE METHODS
-    // ============================================================
+    private val locationPermissionLauncher =
+        registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { permissions ->
+            if (permissions[Manifest.permission.ACCESS_FINE_LOCATION] == true) {
+                fetchLocation()
+            }
+        }
 
-    /**
-     * Called when the activity is created.
-     * Sets up the UI, sensors, and button listeners.
-     *
-     * @param savedInstanceState Previously saved state (if any)
-     */
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_metal_detector)
@@ -132,85 +112,114 @@ class MetalDetectorActivity : AppCompatActivity(), SensorEventListener {
         setupToolbar()
         initializeViews()
         setupSensorManager()
-        setupCalibrateButton()
+        setupButtons()
+        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
+        fetchLocation()
     }
 
-    /**
-     * Called when the activity becomes visible.
-     * Registers the sensor listener to start receiving updates.
-     */
     override fun onResume() {
         super.onResume()
-        // Register sensor listener when activity is visible
         magneticSensor?.let {
             sensorManager.registerListener(this, it, SensorManager.SENSOR_DELAY_UI)
         }
+        fetchLocation()
     }
 
-    /**
-     * Called when the activity is no longer visible.
-     * Unregisters the sensor listener to save battery.
-     */
     override fun onPause() {
         super.onPause()
-        // Unregister sensor listener to save battery
         sensorManager.unregisterListener(this)
-        // Remove any pending calibration
         calibrationRunnable?.let { handler.removeCallbacks(it) }
     }
 
-    // ============================================================
-    // INITIALIZATION METHODS
-    // ============================================================
-
-    /**
-     * Sets up the toolbar with back navigation and title.
-     */
     private fun setupToolbar() {
         val toolbar = findViewById<Toolbar>(R.id.toolbar)
         setSupportActionBar(toolbar)
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
         supportActionBar?.title = getString(R.string.metal_detector_title)
+        toolbar.setNavigationOnClickListener {
+            finish()
+        }
     }
 
-    /**
-     * Initializes all UI view references from the layout.
-     */
     private fun initializeViews() {
         strengthText = findViewById(R.id.strengthText)
         strengthBar = findViewById(R.id.strengthBar)
         statusText = findViewById(R.id.statusText)
         hintText = findViewById(R.id.hintText)
         calibrateButton = findViewById(R.id.calibrateButton)
+        saveSpotButton = findViewById(R.id.saveSpotButton)
+        viewMapButton = findViewById(R.id.viewMapButton)
     }
 
-    /**
-     * Initializes the sensor manager and checks for magnetometer availability.
-     * Shows appropriate error messages if the sensor is not available.
-     */
     private fun setupSensorManager() {
         sensorManager = getSystemService(SENSOR_SERVICE) as SensorManager
         magneticSensor = sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD)
 
         if (magneticSensor == null) {
-            // Magnetometer not available - show error
             statusText.text = getString(R.string.metal_no_sensor)
             hintText.text = getString(R.string.metal_no_sensor_hint)
             Toast.makeText(this, R.string.metal_sensor_not_found, Toast.LENGTH_LONG).show()
         } else {
-            // Sensor available - start scanning
             statusText.text = getString(R.string.metal_scanning)
             hintText.text = getString(R.string.metal_hint)
         }
     }
 
-    /**
-     * Sets up the calibrate button.
-     * Resets the baseline calibration to current readings.
-     */
-    private fun setupCalibrateButton() {
+    private fun setupButtons() {
         calibrateButton.setOnClickListener {
             performCalibration()
+        }
+
+        saveSpotButton.setOnClickListener {
+            if (lastLocation != null) {
+                val spot = DetectionSpot(
+                    lastLocation!!.latitude,
+                    lastLocation!!.longitude,
+                    currentStrength,
+                    System.currentTimeMillis()
+                )
+                detectionSpots.add(spot)
+                Toast.makeText(this, "📍 Detection spot marked! (${String.format(Locale.US, "%.1f µT", currentStrength)})", Toast.LENGTH_SHORT).show()
+            } else {
+                Toast.makeText(this, "Acquiring GPS location...", Toast.LENGTH_SHORT).show()
+                fetchLocation()
+            }
+        }
+
+        viewMapButton.setOnClickListener {
+            val intent = android.content.Intent(this, MapActivity::class.java)
+            if (detectionSpots.isNotEmpty()) {
+                val lats = DoubleArray(detectionSpots.size) { detectionSpots[it].lat }
+                val lons = DoubleArray(detectionSpots.size) { detectionSpots[it].lon }
+                val sdf = SimpleDateFormat("HH:mm:ss", Locale.getDefault())
+                val titles = Array(detectionSpots.size) { "🧲 Metal Spot #${it + 1} (${String.format(Locale.US, "%.1f µT", detectionSpots[it].strength)})" }
+                val snippets = Array(detectionSpots.size) { "Time: ${sdf.format(Date(detectionSpots[it].timestamp))} | Lat: ${String.format(Locale.US, "%.5f", detectionSpots[it].lat)}, Lon: ${String.format(Locale.US, "%.5f", detectionSpots[it].lon)}" }
+
+                intent.putExtra(MapActivity.EXTRA_SPOT_LATS, lats)
+                intent.putExtra(MapActivity.EXTRA_SPOT_LONS, lons)
+                intent.putExtra(MapActivity.EXTRA_SPOT_TITLES, titles)
+                intent.putExtra(MapActivity.EXTRA_SPOT_SNIPPETS, snippets)
+                intent.putExtra(MapActivity.EXTRA_TITLE, "🧲 Metal Detection Spots")
+            } else if (lastLocation != null) {
+                intent.putExtra(MapActivity.EXTRA_LATITUDE, lastLocation!!.latitude)
+                intent.putExtra(MapActivity.EXTRA_LONGITUDE, lastLocation!!.longitude)
+                intent.putExtra(MapActivity.EXTRA_TITLE, "🧲 Metal Detector (${String.format(Locale.US, "%.1f µT", currentStrength)})")
+                intent.putExtra(MapActivity.EXTRA_SNIPPET, statusText.text.toString())
+            }
+            startActivity(intent)
+        }
+    }
+
+    private fun fetchLocation() {
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+            fusedLocationClient.getCurrentLocation(Priority.PRIORITY_HIGH_ACCURACY, null)
+                .addOnSuccessListener { loc ->
+                    if (loc != null) {
+                        lastLocation = loc
+                    }
+                }
+        } else {
+            locationPermissionLauncher.launch(arrayOf(Manifest.permission.ACCESS_FINE_LOCATION))
         }
     }
 
@@ -241,6 +250,7 @@ class MetalDetectorActivity : AppCompatActivity(), SensorEventListener {
             } else {
                 total
             }
+            currentStrength = calibratedValue
 
             // Calculate percentage for progress bar
             val percentage = (calibratedValue / MAX_EXPECTED_VALUE * 100).coerceIn(0.0, 100.0)
