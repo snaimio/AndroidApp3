@@ -173,7 +173,3 @@ SensorToolBox/
      ```bash
      ./gradlew assembleDebug
      ```
-
----
-
-**Developed with ❤️ in Kotlin for Mobile Application Development Assignment 6.**
